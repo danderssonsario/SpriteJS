@@ -12,22 +12,35 @@ export class Sprite {
   constructor(name, canvas, options) {
     this.name = name
     this.context = canvas.getContext('2d')
+
+    // Physical properties
     this.x = 0
     this.y = 0
     this.width = 300
     this.height = 200
 
+    // Animation
     this.animations = {}
     this.currentAnimation = {}
 
+    // Current (Animation = one or more frames)
     this.currentFrame = {}
     this.currentFrameIndex = 0
+
+    // Render delay control.
+    this.fps = 20
+    this.currentTime = 0
+    this.startTime = Date.now()
+    this.fpsInterval = 1000 / this.fps
   }
 
   /**
    * Initiates animation loop.
    */
   update() {
+    this.currentTime = Date.now()
+    let elapsedTime = this.currentTime - this.startTime
+    if (elapsedTime > this.fpsInterval) {
     if (
       this.currentFrameIndex >=
       (this.currentAnimation.images.length || this.currentAnimation.images.frameCount)
@@ -40,6 +53,7 @@ export class Sprite {
 
     this.#draw()
     this.startTime = this.currentTime
+  }
   }
 
   /**
