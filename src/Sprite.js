@@ -18,6 +18,8 @@ export class Sprite {
     this.y = 0
     this.width = 300
     this.height = 200
+    this.speed = 5
+    this.acceleration = 10
 
     // Animation
     this.animations = {}
@@ -32,6 +34,7 @@ export class Sprite {
     this.currentTime = 0
     this.startTime = Date.now()
     this.fpsInterval = 1000 / this.fps
+
   }
 
   /**
@@ -41,19 +44,19 @@ export class Sprite {
     this.currentTime = Date.now()
     let elapsedTime = this.currentTime - this.startTime
     if (elapsedTime > this.fpsInterval) {
-    if (
-      this.currentFrameIndex >=
-      (this.currentAnimation.images.length || this.currentAnimation.images.frameCount)
-    ) {
-      this.currentFrameIndex = 0
+      if (
+        this.currentFrameIndex >=
+        (this.currentAnimation.images.length || this.currentAnimation.images.frameCount)
+      ) {
+        this.currentFrameIndex = 0
+      }
+
+      this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
+      this.currentFrameIndex++
+
+      this.#draw()
+      this.startTime = this.currentTime
     }
-
-    this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
-    this.currentFrameIndex++
-
-    this.#draw()
-    this.startTime = this.currentTime
-  }
   }
 
   /**
@@ -101,6 +104,36 @@ export class Sprite {
       this.currentAnimation = this.animations[name]
     } else {
       throw new Error(`Sprite '${name}': animation ${name} is not defined.`)
+    }
+  }
+
+  /**
+   * Moves sprite in a given direction.
+   *
+   * @param {String} direction - 'LEFT' | 'RIGHT' | 'UP' | 'DOWN'.
+   */
+  move(direction) {
+    this.speed += this.acceleration
+    switch (direction.toUpperCase()) {
+      case 'LEFT':
+        this.x -= this.speed
+        break
+
+      case 'RIGHT':
+        this.x += this.speed
+        break
+
+      case 'UP':
+        this.y += this.speed
+        break
+
+      case 'DOWN':
+        this.y -= this.speed
+        break
+      default:
+        throw new Error(
+          `Sprite '${this.currentAnimation.name}': direction is undefined or invalid.`
+        )
     }
   }
 }

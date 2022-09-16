@@ -24,6 +24,15 @@ player.addAnimation({
 
 player.setCurrentAnimation('Walk')
 
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowRight') {
+    player.move('RIGHT')
+  }
+  if (event.key === 'ArrowLeft') {
+    player.move('LEFT')
+  }
+})
+
 function animate() {
   requestAnimationFrame(animate)
   player.update()
