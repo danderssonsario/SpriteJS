@@ -85,10 +85,12 @@ function animate() {
   
   player.setVelocityX(0)
   player.setVelocityY(0)
+  player.setRotationSpeed(0)
 
   if(keys.left.pressed) {
-    player.setVelocityX(-10)
-    if (!player.getFlipX()) player.setFlipX(true)
+    player.setRotationSpeed(-10)
+    /* player.setVelocityX(-10)
+    if (!player.getFlipX()) player.setFlipX(true) */
   }
 
   if(keys.right.pressed) {
@@ -103,4 +105,7 @@ function animate() {
   
 
 }
+console.log(player.distanceTo({ x: 100, y: 100, width: 100, height: 100 }))
+console.log(player.angleTo({ x: 100, y: 200}))
+
 animate()

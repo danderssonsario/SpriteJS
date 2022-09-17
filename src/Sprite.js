@@ -47,8 +47,6 @@ export class Sprite {
     this.fpsInterval = 1000 / this.fps
 
     this.canWalkOffCanvas = false
-
-    
   }
 
   /**
@@ -58,7 +56,6 @@ export class Sprite {
     this.currentTime = Date.now()
     let elapsedTime = this.currentTime - this.startTime
     if (elapsedTime > this.fpsInterval) {
-
       this.velocityX += this.accelerationX
       this.velocityY += this.accelerationY
 
@@ -76,9 +73,10 @@ export class Sprite {
         }
       } */
 
-      
       this.y += this.velocityY
       this.angle += this.rotationSpeed
+
+      if (this.angle === 360) this.angle = 0
 
       if (
         this.currentFrameIndex >=
@@ -116,7 +114,6 @@ export class Sprite {
     this.context.fillRect(this.x, this.y, this.width, this.height)
     //this.context.drawImage(this.currentFrame, this.x, this.y, this.width, this.height)
     this.context.restore()
-    
   }
 
   /**
@@ -237,9 +234,9 @@ export class Sprite {
     this.flipX = value
   }
 
-   /**
+  /**
    * Sets property to flip sprite on vertical axis.
-   * 
+   *
    * @param {Boolean} value - Flip value.
    */
   setFlipY(value) {
@@ -260,17 +257,37 @@ export class Sprite {
     return this.angle
   }
 
-  distanceTo() {
+  /**
+   * Gets distance between center point of sprite and target.
+   * Defaults to center point if target is two dimensional.
+   *
+   * @param {Object|Sprite} target - Target object.
+   * @returns {Number} Distance in points.
+   */
+  distanceTo(target) {
+    const centerX = this.x + this.width / 2
+    const centerY = this.y + this.height / 2
+    const targetCenterX = target.x + (target.width / 2 || 0)
+    const targetCenterY = target.y + (target.height / 2 || 0)
 
+    return Math.sqrt(Math.pow(centerX - targetCenterX, 2) + Math.pow(centerY - targetCenterY, 2))
   }
 
-  angleTo() {
+  /**
+   * Gets angle between center point of sprite and target.
+   * Defaults to center point if target is two dimensional.
+   *
+   * @param {Object|Sprite} target - Target object.
+   * @returns {Number} - Angle in degrees.
+   */
+  angleTo(target) {
+    const centerX = this.x + this.width / 2
+    const centerY = this.y + this.height / 2
+    const targetCenterX = target.x + (target.width / 2 || 0)
+    const targetCenterY = target.y + (target.height / 2 || 0)
 
+    return (Math.atan2(targetCenterY - centerY, targetCenterX - centerX) * 180) / Math.PI
   }
 
-  detectCollision(target) {
-
-  }
-
-  
+  detectCollision(target) {}
 }
