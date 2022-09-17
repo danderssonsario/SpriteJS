@@ -86,8 +86,15 @@ function animate() {
   player.setVelocityX(0)
   player.setVelocityY(0)
 
-  if(keys.left.pressed) player.setVelocityX(-10)
-  if(keys.right.pressed) player.setVelocityX(10)
+  if(keys.left.pressed) {
+    player.setVelocityX(-10)
+    if (!player.getFlipX()) player.setFlipX(true)
+  }
+
+  if(keys.right.pressed) {
+    player.setVelocityX(10)
+    if (player.getFlipX()) player.setFlipX(false)
+  }
   if(keys.up.pressed) player.setVelocityY(-10)
   if(keys.down.pressed) player.setVelocityY(10)
 

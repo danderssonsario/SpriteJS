@@ -22,6 +22,8 @@ export class Sprite {
     this.velocityY = 0
     this.accelerationX = 0
     this.accelerationY = 0
+    this.flipX = false
+    this.flipY = false
 
     // Animation
     this.animations = {}
@@ -45,6 +47,8 @@ export class Sprite {
     this.currentTime = Date.now()
     let elapsedTime = this.currentTime - this.startTime
     if (elapsedTime > this.fpsInterval) {
+      
+
       this.velocityX += this.accelerationX
       this.velocityY += this.accelerationY
       this.x += this.velocityX
@@ -69,8 +73,18 @@ export class Sprite {
    * Draws current frame to canvas.
    */
   #draw() {
+    this.context.save()
+
+    // Flips context if toggled.
+    if (this.flipX || this.flipY) {
+      this.context.translate(this.x + this.width / 2, this.y + this.width / 2)
+      this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
+      this.context.translate(-(this.x + this.width / 2), -(this.y + this.width / 2))
+    }
+
     this.context.clearRect(0, 0, innerWidth, innerHeight)
     this.context.drawImage(this.currentFrame, this.x, this.y, this.width, this.height)
+    this.context.restore()
   }
 
   /**
@@ -161,5 +175,47 @@ export class Sprite {
     this.accelerationY = value
   }
 
+  /**
+   * Gets flipX property.
+   *
+   * @returns {Boolean} - True if sprite is flipped on its horizontal axis.
+   */
+  getFlipX() {
+    return this.flipX === true
+  }
+
+  /**
+   * Gets flipY property.
+   *
+   * @returns {Boolean} - True if sprite is flipped on its vertical axis.
+   */
+  getFlipY() {
+    return this.flipY === true
+  }
+
+  /**
+   * Sets attribute to flip sprite on horizontal axis.
+   *
+   * @param {Boolean} value - Flip value.
+   */
+  setFlipX(value) {
+    if (typeof value !== 'boolean') {
+      throw new Error(`Sprite '${this.name}': flip can only be boolean.`)
+    }
+    this.flipX = !this.flipX
+  }
+
+   /**
+   * Sets attribute to flip sprite on vertical axis.
+   * 
+   * @param {Boolean} value - Flip value.
+   */
+  setFlipY() {
+    if (typeof value !== 'boolean') {
+      throw new Error(`Sprite '${this.name}': flip can only be boolean.`)
+    }
+    this.flipX = !this.flipX
+  }
+   
   
 }
