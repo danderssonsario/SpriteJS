@@ -11,12 +11,13 @@ export class Sprite {
    */
   constructor(name, canvas, options) {
     this.name = name
+    this.canvas = canvas
     this.context = canvas.getContext('2d')
 
     // Physical properties
     this.x = 0
-    this.y = 0
-    this.width = 300
+    this.y = 100
+    this.width = 200
     this.height = 200
     this.velocityX = 0
     this.velocityY = 0
@@ -24,6 +25,12 @@ export class Sprite {
     this.accelerationY = 0
     this.flipX = false
     this.flipY = false
+
+    this.rotationSpeed = 0
+    this.angle = 0
+
+    //
+    this.isEdited
 
     // Animation
     this.animations = {}
@@ -34,25 +41,44 @@ export class Sprite {
     this.currentFrameIndex = 0
 
     // Render delay control.
-    this.fps = 20
+    this.fps = 60
     this.currentTime = 0
     this.startTime = Date.now()
     this.fpsInterval = 1000 / this.fps
+
+    this.canWalkOffCanvas = false
+
+    
   }
 
   /**
-   * Initiates animation loop.
+   * Updates sprite properties before drawing to canvas.
    */
   update() {
     this.currentTime = Date.now()
     let elapsedTime = this.currentTime - this.startTime
     if (elapsedTime > this.fpsInterval) {
-      
 
       this.velocityX += this.accelerationX
       this.velocityY += this.accelerationY
-      this.x += this.velocityX
+
+      /* if(!this.canWalkOffCanvas) {
+        if (this.x <= this.canvas.offsetLeft) {
+          this.x = this.canvas.offsetLeft
+        } else {
+          this.x += this.velocityX
+        }
+        if (this.x >= this.canvas.offsetLeft + this.canvas.width) {
+
+        }
+         else if (this.y <= this.canvas.offsetTop || this.y >= this.canvas.offsetTop + this.canvas.height) {
+          
+        }
+      } */
+
+      
       this.y += this.velocityY
+      this.angle += this.rotationSpeed
 
       if (
         this.currentFrameIndex >=
@@ -73,18 +99,24 @@ export class Sprite {
    * Draws current frame to canvas.
    */
   #draw() {
+    this.context.clearRect(0, 0, innerWidth, innerHeight)
     this.context.save()
 
     // Flips context if toggled.
     if (this.flipX || this.flipY) {
-      this.context.translate(this.x + this.width / 2, this.y + this.width / 2)
+      this.context.translate(this.x + this.width / 2, this.y + this.height / 2)
       this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
-      this.context.translate(-(this.x + this.width / 2), -(this.y + this.width / 2))
+      this.context.translate(-(this.x + this.width / 2), -(this.y + this.height / 2))
     }
 
-    this.context.clearRect(0, 0, innerWidth, innerHeight)
-    this.context.drawImage(this.currentFrame, this.x, this.y, this.width, this.height)
+    this.context.translate(this.x + this.width / 2, this.y + this.height / 2)
+    this.context.rotate((this.angle * Math.PI) / 180)
+    this.context.translate(-(this.x + this.width / 2), -(this.y + this.height / 2))
+
+    this.context.fillRect(this.x, this.y, this.width, this.height)
+    //this.context.drawImage(this.currentFrame, this.x, this.y, this.width, this.height)
     this.context.restore()
+    
   }
 
   /**
@@ -117,7 +149,7 @@ export class Sprite {
   /**
    * Sets current animation loop.
    *
-   * @param {String} name - Name attribute of animation object.
+   * @param {String} name - Name property of animation object.
    */
   setCurrentAnimation(name) {
     if (this.animations[name]) {
@@ -194,7 +226,7 @@ export class Sprite {
   }
 
   /**
-   * Sets attribute to flip sprite on horizontal axis.
+   * Sets property to flip sprite on horizontal axis.
    *
    * @param {Boolean} value - Flip value.
    */
@@ -202,20 +234,43 @@ export class Sprite {
     if (typeof value !== 'boolean') {
       throw new Error(`Sprite '${this.name}': flip can only be boolean.`)
     }
-    this.flipX = !this.flipX
+    this.flipX = value
   }
 
    /**
-   * Sets attribute to flip sprite on vertical axis.
+   * Sets property to flip sprite on vertical axis.
    * 
    * @param {Boolean} value - Flip value.
    */
-  setFlipY() {
+  setFlipY(value) {
     if (typeof value !== 'boolean') {
       throw new Error(`Sprite '${this.name}': flip can only be boolean.`)
     }
-    this.flipX = !this.flipX
+    this.flipX = value
   }
-   
+
+  setRotationSpeed(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
+    }
+    this.rotationSpeed = value
+  }
+
+  getAngle() {
+    return this.angle
+  }
+
+  distanceTo() {
+
+  }
+
+  angleTo() {
+
+  }
+
+  detectCollision(target) {
+
+  }
+
   
 }

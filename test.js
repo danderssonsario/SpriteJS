@@ -92,9 +92,11 @@ function animate() {
   }
 
   if(keys.right.pressed) {
-    player.setVelocityX(10)
-    if (player.getFlipX()) player.setFlipX(false)
+    player.setRotationSpeed(10)
+    /* player.setVelocityX(10)
+    if (player.getFlipX()) player.setFlipX(false) */
   }
+
   if(keys.up.pressed) player.setVelocityY(-10)
   if(keys.down.pressed) player.setVelocityY(10)
 
