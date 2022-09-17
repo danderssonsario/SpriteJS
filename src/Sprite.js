@@ -1,7 +1,7 @@
 export class Sprite {
   /**
    *
-   * @param {String} name - Identifier.
+   * @param {String} name - Identifier for errors.
    * @param {HTMLCanvasElement} canvas - Canvas element to create drawing context from.
    * @param {*} options - Configuration options parameters.
    * @param {Number} x - X coordinate of sprite object.
@@ -18,8 +18,10 @@ export class Sprite {
     this.y = 0
     this.width = 300
     this.height = 200
-    this.speed = 5
-    this.acceleration = 10
+    this.velocityX = 0
+    this.velocityY = 0
+    this.accelerationX = 0
+    this.accelerationY = 0
 
     // Animation
     this.animations = {}
@@ -34,7 +36,6 @@ export class Sprite {
     this.currentTime = 0
     this.startTime = Date.now()
     this.fpsInterval = 1000 / this.fps
-
   }
 
   /**
@@ -44,6 +45,11 @@ export class Sprite {
     this.currentTime = Date.now()
     let elapsedTime = this.currentTime - this.startTime
     if (elapsedTime > this.fpsInterval) {
+      this.velocityX += this.accelerationX
+      this.velocityY += this.accelerationY
+      this.x += this.velocityX
+      this.y += this.velocityY
+
       if (
         this.currentFrameIndex >=
         (this.currentAnimation.images.length || this.currentAnimation.images.frameCount)
@@ -76,7 +82,7 @@ export class Sprite {
     const { name, images } = options
 
     if (this.animations[name]) {
-      throw new Error(`Sprite ${name}: animation already exists.`)
+      throw new Error(`Sprite '${this.name}': animation '${name}' already exists.`)
     }
 
     let frames = []
@@ -103,37 +109,57 @@ export class Sprite {
     if (this.animations[name]) {
       this.currentAnimation = this.animations[name]
     } else {
-      throw new Error(`Sprite '${name}': animation ${name} is not defined.`)
+      throw new Error(`Sprite '${this.name}': animation '${name}' is not defined.`)
     }
   }
 
   /**
-   * Moves sprite in a given direction.
+   * Sets horizontal velocity.
    *
-   * @param {String} direction - 'LEFT' | 'RIGHT' | 'UP' | 'DOWN'.
+   * @param {Number} value - Velocity value.
    */
-  move(direction) {
-    this.speed += this.acceleration
-    switch (direction.toUpperCase()) {
-      case 'LEFT':
-        this.x -= this.speed
-        break
-
-      case 'RIGHT':
-        this.x += this.speed
-        break
-
-      case 'UP':
-        this.y += this.speed
-        break
-
-      case 'DOWN':
-        this.y -= this.speed
-        break
-      default:
-        throw new Error(
-          `Sprite '${this.currentAnimation.name}': direction is undefined or invalid.`
-        )
+  setVelocityX(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': velocity can only be number.`)
     }
+    this.velocityX = value
   }
+
+  /**
+   * Sets vertical velocity.
+   *
+   * @param {Number} value - Velocity value.
+   */
+  setVelocityY(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': velocity can only be number.`)
+    }
+    this.velocityY = value
+  }
+
+  /**
+   * Sets horizontal acceleration.
+   *
+   * @param {Number} value - Acceleration value.
+   */
+  setAccelerationX(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
+    }
+    this.accelerationX = value
+  }
+
+  /**
+   * Sets vertical acceleration.
+   *
+   * @param {Number} value - Acceleration value.
+   */
+  setAccelerationY() {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
+    }
+    this.accelerationY = value
+  }
+
+  
 }

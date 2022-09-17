@@ -24,17 +24,74 @@ player.addAnimation({
 
 player.setCurrentAnimation('Walk')
 
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'ArrowRight') {
-    player.move('RIGHT')
+let keys = {
+  left: { 
+    pressed: false
+  },
+  right: {
+    pressed: false
+  },
+  up: {
+    pressed: false
+  },
+  down: {
+    pressed: false
   }
-  if (event.key === 'ArrowLeft') {
-    player.move('LEFT')
+}
+addEventListener('keydown', ({ key }) => {
+  switch (key) {
+    case 'ArrowLeft':
+      keys.left.pressed = true
+      break
+    case 'ArrowRight':
+      keys.right.pressed = true
+      break
+    case 'ArrowDown':
+      keys.down.pressed = true
+      break
+    case 'ArrowUp':
+      keys.up.pressed = true
+      break
+    default:
+      break;
   }
 })
 
+addEventListener('keyup', ({ key }) => {
+  switch (key) {
+    case 'ArrowLeft':
+      keys.left.pressed = false
+      break
+    case 'ArrowRight':
+      keys.right.pressed = false
+      break
+    case 'ArrowDown':
+      keys.down.pressed = false
+      break
+    case 'ArrowUp':
+      keys.up.pressed = false
+      break
+    default:
+      break
+  }
+})
+
+/**
+ * Sprite loop.
+ */
 function animate() {
   requestAnimationFrame(animate)
   player.update()
+  
+  player.setVelocityX(0)
+  player.setVelocityY(0)
+
+  if(keys.left.pressed) player.setVelocityX(-10)
+  if(keys.right.pressed) player.setVelocityX(10)
+  if(keys.up.pressed) player.setVelocityY(-10)
+  if(keys.down.pressed) player.setVelocityY(10)
+
+  
+
 }
 animate()
