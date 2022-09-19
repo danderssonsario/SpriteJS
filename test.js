@@ -3,8 +3,10 @@ import { Sprite } from './src/Sprite.js'
 const canvas = document.querySelector('canvas')
 canvas.width = innerWidth
 canvas.height = innerHeight
+const context = canvas.getContext('2d')
 
-const player = new Sprite('player', canvas)
+const player = new Sprite('player', context, {x: 50, y:50})
+//const player2 = new Sprite('player2', context, {x: 50, y: 200})
 
 player.addAnimation({
   name: 'Walk',
@@ -81,31 +83,35 @@ addEventListener('keyup', ({ key }) => {
  */
 function animate() {
   requestAnimationFrame(animate)
+  context.clearRect(0, 0, canvas.width, canvas.height)
+
   player.update()
+ 
+  //player2.update()
   
   player.setVelocityX(0)
   player.setVelocityY(0)
   player.setRotationSpeed(0)
 
   if(keys.left.pressed) {
-    player.setRotationSpeed(-10)
+    player.setRotationSpeed(-1)
     /* player.setVelocityX(-10)
     if (!player.getFlipX()) player.setFlipX(true) */
   }
 
   if(keys.right.pressed) {
-    player.setRotationSpeed(10)
+    player.setRotationSpeed(1)
     /* player.setVelocityX(10)
     if (player.getFlipX()) player.setFlipX(false) */
   }
 
-  if(keys.up.pressed) player.setVelocityY(-10)
-  if(keys.down.pressed) player.setVelocityY(10)
+  if(keys.up.pressed) player.setVelocityY(-5)
+  if(keys.down.pressed) player.setVelocityY(5)
 
-  
+  /* if(player.detectCollision(player2)) {
+    console.log('hej')
+  } */
 
 }
-console.log(player.distanceTo({ x: 100, y: 100, width: 100, height: 100 }))
-console.log(player.angleTo({ x: 100, y: 200}))
 
 animate()

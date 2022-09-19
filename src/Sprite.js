@@ -2,64 +2,67 @@ export class Sprite {
   /**
    *
    * @param {String} name - Identifier for errors.
-   * @param {HTMLCanvasElement} canvas - Canvas element to create drawing context from.
+   * @param {CanvasRenderingContext2D} context - 2D rendering context for canvas element.
    * @param {*} options - Configuration options parameters.
    * @param {Number} x - X coordinate of sprite object.
    * @param {Number} y - Y coordinate of sprite object.
    * @param {Number} width - Width of sprite object.
    * @param {Number} height - Height of sprite object.
    */
-  constructor(name, canvas, options) {
+  constructor(name, context, options) {
     this.name = name
-    this.canvas = canvas
-    this.context = canvas.getContext('2d')
+    this.context = context
 
     // Physical properties
-    this.x = 0
-    this.y = 100
-    this.width = 200
-    this.height = 200
+    this.x = options.x
+    this.y = options.y
+
+    this.width = 100
+    this.height = 100
     this.velocityX = 0
     this.velocityY = 0
     this.accelerationX = 0
     this.accelerationY = 0
     this.flipX = false
     this.flipY = false
+    this.vertices = {}
+    this.edges = {}
 
     this.rotationSpeed = 0
     this.angle = 0
 
-    //
-    this.isEdited
-
     // Animation
     this.animations = {}
-    this.currentAnimation = {}
+    this.currentAnimation = null
 
     // Current (Animation = one or more frames)
     this.currentFrame = {}
     this.currentFrameIndex = 0
 
     // Render delay control.
-    this.fps = 60
+    //this.delay = 1000
     this.currentTime = 0
     this.startTime = Date.now()
-    this.fpsInterval = 1000 / this.fps
-
-    this.canWalkOffCanvas = false
+    this.fpsInterval = 1000
   }
 
   /**
    * Updates sprite properties before drawing to canvas.
    */
   update() {
-    this.currentTime = Date.now()
-    let elapsedTime = this.currentTime - this.startTime
-    if (elapsedTime > this.fpsInterval) {
-      this.velocityX += this.accelerationX
-      this.velocityY += this.accelerationY
+    this.velocityX += this.accelerationX
+    this.velocityY += this.accelerationY
 
-      /* if(!this.canWalkOffCanvas) {
+    this.vertices = {
+      v1: this.#getVertex(this.x + this.width, this.y),
+      v2: this.#getVertex(this.x + this.width, this.y + this.height),
+      v3: this.#getVertex(this.x, this.y + this.height),
+      v4: this.#getVertex(this.x, this.y)
+    }
+
+    this.edges = this.#getEdges()
+
+    /* if(!this.canWalkOffCanvas) {
         if (this.x <= this.canvas.offsetLeft) {
           this.x = this.canvas.offsetLeft
         } else {
@@ -73,31 +76,36 @@ export class Sprite {
         }
       } */
 
-      this.y += this.velocityY
-      this.angle += this.rotationSpeed
+    this.y += this.velocityY
+    this.angle += this.rotationSpeed
 
-      if (this.angle === 360) this.angle = 0
+    if (this.angle >= 360 || this.angle <= -360) this.angle = 0
 
-      if (
-        this.currentFrameIndex >=
-        (this.currentAnimation.images.length || this.currentAnimation.images.frameCount)
-      ) {
-        this.currentFrameIndex = 0
+    this.currentTime = Date.now()
+    let elapsedTime = this.currentTime - this.startTime
+    if (elapsedTime > this.fpsInterval) {
+      if (this.currentAnimation) {
+        if (
+          this.currentFrameIndex >=
+          (this.currentAnimation.images.length || this.currentAnimation.images.frameCount)
+        ) {
+          this.currentFrameIndex = 0
+        }
+
+        this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
       }
 
-      this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
       this.currentFrameIndex++
-
-      this.#draw()
       this.startTime = this.currentTime
     }
+
+    this.#draw()
   }
 
   /**
    * Draws current frame to canvas.
    */
   #draw() {
-    this.context.clearRect(0, 0, innerWidth, innerHeight)
     this.context.save()
 
     // Flips context if toggled.
@@ -110,9 +118,10 @@ export class Sprite {
     this.context.translate(this.x + this.width / 2, this.y + this.height / 2)
     this.context.rotate((this.angle * Math.PI) / 180)
     this.context.translate(-(this.x + this.width / 2), -(this.y + this.height / 2))
+    //this.context.fillRect(this.x, this.y, this.width, this.height)
 
-    this.context.fillRect(this.x, this.y, this.width, this.height)
-    //this.context.drawImage(this.currentFrame, this.x, this.y, this.width, this.height)
+    this.context.drawImage(this.currentFrame, this.x, this.y, this.width, this.height)
+
     this.context.restore()
   }
 
@@ -261,7 +270,7 @@ export class Sprite {
    * Gets distance between center point of sprite and target.
    * Defaults to center point if target is two dimensional.
    *
-   * @param {Object|Sprite} target - Target object.
+   * @param {Object} target - Target object.
    * @returns {Number} Distance in points.
    */
   distanceTo(target) {
@@ -289,5 +298,118 @@ export class Sprite {
     return (Math.atan2(targetCenterY - centerY, targetCenterX - centerX) * 180) / Math.PI
   }
 
-  detectCollision(target) {}
+  /**
+   * Detects collision.
+   *
+   * @param {Sprite} target - { x: Number, y: Number, vertices: [Object], edges: [Object]}
+   */
+  detectCollision(target) {
+    // Unrotated rectangles.
+    /* if (
+      this.x + this.width >= target.x &&
+      this.x <= target.x + target.width &&
+      this.y + this.height >= target.y &&
+      this.y <= target.y + target.height
+    ) {
+      return true
+    } */
+
+    const normalVectors = []
+    // get normal of each edge
+    for (const edge in this.edges) {
+      const normal = { x: -1 * this.edges[edge].y, y: this.edges[edge].x }
+      normalVectors.push(normal)
+    }
+
+    for (let i = 0; i < normalVectors.length; i++) {
+      // Dot product for all vertices against every normal vector.
+      let dotProductMax = null
+      let dotProductMin = null
+      let targetDotProductMax = null
+      let targetDotProductMin = null
+
+      for (const vertex in this.vertices) {
+        const dotProduct =
+          this.vertices[vertex].x * normalVectors[i].x +
+          this.vertices[vertex].y * normalVectors[i].y
+        if (dotProductMax === null || dotProduct > dotProductMax) {
+          dotProductMax = dotProduct
+        }
+
+        if (dotProductMin === null || dotProduct < dotProductMin) {
+          dotProductMin = dotProduct
+        }
+      }
+
+      for (const vertex in target.vertices) {
+        const dotProduct =
+          target.vertices[vertex].x * normalVectors[i].x +
+          target.vertices[vertex].y * normalVectors[i].y
+        if (targetDotProductMax === null || dotProduct > targetDotProductMax) {
+          targetDotProductMax = dotProduct
+        }
+
+        if (targetDotProductMin === null || dotProduct < targetDotProductMin) {
+          targetDotProductMin = dotProduct
+        }
+      }
+
+      // Return true if every dot product projection overlaps.
+      if (
+        (dotProductMin > targetDotProductMin && dotProductMin < targetDotProductMax) ||
+        (dotProductMax > targetDotProductMin && dotProductMax < targetDotProductMax)
+      ) {
+        continue
+      } else {
+        // Return false if gap occurs.
+        return false
+      }
+    }
+
+    return true
+  }
+
+  /**
+   * Sets movement boundaries.
+   */
+  setBoundaries() {}
+
+  /**
+   *
+   */
+  #getVertex(x, y) {
+    const currentAngleInRadians = (this.angle * Math.PI) / 180
+
+    const distanceToVertex = this.distanceTo({ x: x, y: y })
+    const angleToVertex = (this.angleTo({ x: x, y: y }) * Math.PI) / 180
+
+    return {
+      x:
+        this.x +
+        this.width / 2 +
+        distanceToVertex * Math.cos(currentAngleInRadians + angleToVertex),
+      y:
+        this.y +
+        this.height / 2 +
+        distanceToVertex * Math.sin(currentAngleInRadians + angleToVertex)
+    }
+  }
+
+  #getEdges() {
+    return {
+      e1: {
+        x: this.vertices.v2.x - this.vertices.v1.x,
+        y: this.vertices.v2.y - this.vertices.v2.y
+      },
+      e2: {
+        x: this.vertices.v3.x - this.vertices.v2.x,
+        y: this.vertices.v3.y - this.vertices.v2.y
+      },
+      e3: {
+        x: this.vertices.v4.x - this.vertices.v3.x,
+        y: this.vertices.v4.y - this.vertices.v3.y
+      },
+      e4: { x: this.vertices.v1.x - this.vertices.v4.x, y: this.vertices.v4.y - this.vertices.v1.y }
+    }
+  }
 }
