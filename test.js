@@ -5,7 +5,16 @@ canvas.width = innerWidth
 canvas.height = innerHeight
 const context = canvas.getContext('2d')
 
-const player = new Sprite('player', context, {x: 50, y:50})
+const options = {
+  position: {x: 50, y: 50},
+  velocity: {x: 0, y: 0},
+  acceleration: {x: 0, y: 0},
+  width: 100,
+  height: 100,
+  friction: 0,
+  rotation: { angle: 0, speed: 0},
+}
+const player = new Sprite('player', context, options)
 //const player2 = new Sprite('player2', context, {x: 50, y: 200})
 
 player.addAnimation({
@@ -78,6 +87,7 @@ addEventListener('keyup', ({ key }) => {
   }
 })
 
+
 /**
  * Sprite loop.
  */
@@ -89,24 +99,36 @@ function animate() {
  
   //player2.update()
   
-  player.setVelocityX(0)
-  player.setVelocityY(0)
+  /* player.setVelocityX(0)
+  player.setVelocityY(0) */
   player.setRotationSpeed(0)
 
   if(keys.left.pressed) {
-    player.setRotationSpeed(-1)
+    player.setRotationSpeed(-5)
     /* player.setVelocityX(-10)
     if (!player.getFlipX()) player.setFlipX(true) */
   }
 
   if(keys.right.pressed) {
-    player.setRotationSpeed(1)
+    player.setRotationSpeed(5)
     /* player.setVelocityX(10)
     if (player.getFlipX()) player.setFlipX(false) */
   }
 
-  if(keys.up.pressed) player.setVelocityY(-5)
-  if(keys.down.pressed) player.setVelocityY(5)
+  if(keys.up.pressed) {
+    //player.acccelerate(0.1,0.1)
+    /*player.setVelocityY(1)
+    player.setVelocityX(1) */
+    //player.moveX()
+    //player.accelerate(1,1)
+    player.setVelocity(10,10)
+  } else if (!keys.up.pressed) {
+    //player.moveX()
+    //player.accelerate(0,0)
+    //player.acccelerate(0,0)
+    player.setVelocity(0,0)
+  }
+  // if(keys.down.pressed) 
 
   /* if(player.detectCollision(player2)) {
     console.log('hej')

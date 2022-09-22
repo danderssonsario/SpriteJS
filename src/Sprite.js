@@ -14,23 +14,43 @@ export class Sprite {
     this.context = context
 
     // Physical properties
-    this.x = options.x
-    this.y = options.y
+    this.position = {
+      x: options.position.x,
+      y: options.position.y
+    }
 
-    this.width = 100
-    this.height = 100
-    this.velocityX = 0
-    this.velocityY = 0
-    this.accelerationX = 0
-    this.accelerationY = 0
-    this.flipX = false
-    this.flipY = false
+    this.width = options.width
+    this.height = options.height
+
+    this.velocity = {
+      x: options.velocity.x,
+      y: options.velocity.y
+    }
+
+    this.acceleration = {
+      x: options.acceleration.x,
+      y: options.acceleration.y
+    }
+
+    this.flip = {
+      x: false,
+      y: false
+    }
+
     this.vertices = {}
     this.edges = {}
 
-    this.rotationSpeed = 0
-    this.angle = 0
+    this.friction = options.friction
 
+    this.rotation = {
+      angle: options.rotation.angle,
+      speed: options.rotation.speed
+    }
+
+    /* this.image = {
+      type: options.image.type,
+      src: options.image.src
+    } */
     // Animation
     this.animations = {}
     this.currentAnimation = null
@@ -40,7 +60,7 @@ export class Sprite {
     this.currentFrameIndex = 0
 
     // Render delay control.
-    //this.delay = 1000
+    this.delayPerFrame
     this.currentTime = 0
     this.startTime = Date.now()
     this.fpsInterval = 1000
@@ -50,54 +70,35 @@ export class Sprite {
    * Updates sprite properties before drawing to canvas.
    */
   update() {
-    this.velocityX += this.accelerationX
-    this.velocityY += this.accelerationY
-
     this.vertices = {
-      v1: this.#getVertex(this.x + this.width, this.y),
-      v2: this.#getVertex(this.x + this.width, this.y + this.height),
-      v3: this.#getVertex(this.x, this.y + this.height),
-      v4: this.#getVertex(this.x, this.y)
+      v1: this.#getVertex(this.position.x + this.width, this.position.y),
+      v2: this.#getVertex(this.position.x + this.width, this.position.y + this.height),
+      v3: this.#getVertex(this.position.x, this.position.y + this.height),
+      v4: this.#getVertex(this.position.x, this.position.y)
     }
 
     this.edges = this.#getEdges()
 
     /* if(!this.canWalkOffCanvas) {
-        if (this.x <= this.canvas.offsetLeft) {
-          this.x = this.canvas.offsetLeft
+        if (this.position.x <= this.canvas.offsetLeft) {
+          this.position.x = this.canvas.offsetLeft
         } else {
-          this.x += this.velocityX
+          this.position.x += this.velocityX
         }
-        if (this.x >= this.canvas.offsetLeft + this.canvas.width) {
+        if (this.position.x >= this.canvas.offsetLeft + this.canvas.width) {
 
         }
-         else if (this.y <= this.canvas.offsetTop || this.y >= this.canvas.offsetTop + this.canvas.height) {
+         else if (this.position.y <= this.canvas.offsetTop || this.position.y >= this.canvas.offsetTop + this.canvas.height) {
           
         }
       } */
 
-    this.y += this.velocityY
-    this.angle += this.rotationSpeed
+    this.#updateVelocity()
 
-    if (this.angle >= 360 || this.angle <= -360) this.angle = 0
-
-    this.currentTime = Date.now()
-    let elapsedTime = this.currentTime - this.startTime
-    if (elapsedTime > this.fpsInterval) {
-      if (this.currentAnimation) {
-        if (
-          this.currentFrameIndex >=
-          (this.currentAnimation.images.length || this.currentAnimation.images.frameCount)
-        ) {
-          this.currentFrameIndex = 0
-        }
-
-        this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
-      }
-
-      this.currentFrameIndex++
-      this.startTime = this.currentTime
-    }
+    this.#applyFriction()
+    this.#updateRotation()
+    this.#updatePosition()
+    this.#updateFrame()
 
     this.#draw()
   }
@@ -110,17 +111,17 @@ export class Sprite {
 
     // Flips context if toggled.
     if (this.flipX || this.flipY) {
-      this.context.translate(this.x + this.width / 2, this.y + this.height / 2)
+      this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
       this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
-      this.context.translate(-(this.x + this.width / 2), -(this.y + this.height / 2))
+      this.context.translate(-(this.position.x + this.width / 2), -(this.position.y + this.height / 2))
     }
 
-    this.context.translate(this.x + this.width / 2, this.y + this.height / 2)
-    this.context.rotate((this.angle * Math.PI) / 180)
-    this.context.translate(-(this.x + this.width / 2), -(this.y + this.height / 2))
-    //this.context.fillRect(this.x, this.y, this.width, this.height)
+    this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
+    this.context.rotate((this.rotation.angle * Math.PI) / 180)
 
-    this.context.drawImage(this.currentFrame, this.x, this.y, this.width, this.height)
+    this.context.translate(-(this.position.x + this.width / 2), -(this.position.y + this.height / 2))
+    //this.context.fillRect(this.position.x, this.position.y, this.width, this.height)
+    this.context.drawImage(this.currentFrame, this.position.x, this.position.y, this.width, this.height)
 
     this.context.restore()
   }
@@ -150,6 +151,7 @@ export class Sprite {
       name: name,
       images: frames
     }
+
   }
 
   /**
@@ -166,51 +168,38 @@ export class Sprite {
   }
 
   /**
-   * Sets horizontal velocity.
+   * Sets sprite velocty.
    *
-   * @param {Number} value - Velocity value.
+   * @param {Number} velocityX - Horizontal velocity.
+   * @param {Number} velocityY - Vertical velocity.
    */
-  setVelocityX(value) {
-    if (typeof value !== 'number') {
-      throw new Error(`Sprite '${this.name}': velocity can only be number.`)
-    }
-    this.velocityX = value
+  setVelocity(velocityX, velocityY) {
+    this.velocity.x = velocityX
+    this.velocity.y = velocityY
   }
 
   /**
-   * Sets vertical velocity.
+   * Sets sprite acceleration.
    *
-   * @param {Number} value - Velocity value.
+   * @param {Number} accelerationX - Horizontal acceleration.
+   * @param {Number} accelerationY - Vertical acceleration.
    */
-  setVelocityY(value) {
-    if (typeof value !== 'number') {
-      throw new Error(`Sprite '${this.name}': velocity can only be number.`)
-    }
-    this.velocityY = value
+  setAcceleration(accelerationX, accelerationY) {
+    this.acceleration.x = accelerationX * Math.cos((this.rotation.angle * Math.PI) / 180)
+    this.acceleration.y = accelerationY * Math.sin((this.rotation.angle * Math.PI) / 180)
   }
 
+
   /**
-   * Sets horizontal acceleration.
+   * Sets rotationspeed.
    *
-   * @param {Number} value - Acceleration value.
+   * @param {Number} value - Rotation speed value. Positive -> clockwise rotation.
    */
-  setAccelerationX(value) {
+  setRotationSpeed(value) {
     if (typeof value !== 'number') {
       throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
     }
-    this.accelerationX = value
-  }
-
-  /**
-   * Sets vertical acceleration.
-   *
-   * @param {Number} value - Acceleration value.
-   */
-  setAccelerationY() {
-    if (typeof value !== 'number') {
-      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
-    }
-    this.accelerationY = value
+    this.rotation.speed = value
   }
 
   /**
@@ -255,15 +244,15 @@ export class Sprite {
     this.flipX = value
   }
 
-  setRotationSpeed(value) {
-    if (typeof value !== 'number') {
-      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
-    }
-    this.rotationSpeed = value
-  }
-
-  getAngle() {
-    return this.angle
+  /**
+   * Sets property to flip sprite.
+   * 
+   * @param {Boolean} flipX - Horizontal flip.
+   * @param {Boolean} flipY - Vertical flip.
+   */
+  setFlip(flipX, flipY) {
+    this.flip.x = flipX
+    this.flip.y = flipY
   }
 
   /**
@@ -274,8 +263,8 @@ export class Sprite {
    * @returns {Number} Distance in points.
    */
   distanceTo(target) {
-    const centerX = this.x + this.width / 2
-    const centerY = this.y + this.height / 2
+    const centerX = this.position.x + this.width / 2
+    const centerY = this.position.y + this.height / 2
     const targetCenterX = target.x + (target.width / 2 || 0)
     const targetCenterY = target.y + (target.height / 2 || 0)
 
@@ -290,8 +279,8 @@ export class Sprite {
    * @returns {Number} - Angle in degrees.
    */
   angleTo(target) {
-    const centerX = this.x + this.width / 2
-    const centerY = this.y + this.height / 2
+    const centerX = this.position.x + this.width / 2
+    const centerY = this.position.y + this.height / 2
     const targetCenterX = target.x + (target.width / 2 || 0)
     const targetCenterY = target.y + (target.height / 2 || 0)
 
@@ -305,14 +294,14 @@ export class Sprite {
    */
   detectCollision(target) {
     // Unrotated rectangles.
-    /* if (
-      this.x + this.width >= target.x &&
-      this.x <= target.x + target.width &&
-      this.y + this.height >= target.y &&
-      this.y <= target.y + target.height
+    if (
+      this.position.x + this.width >= target.x &&
+      this.position.x <= target.x + target.width &&
+      this.position.y + this.height >= target.y &&
+      this.position.y <= target.y + target.height
     ) {
       return true
-    } */
+    }
 
     const normalVectors = []
     // get normal of each edge
@@ -354,7 +343,7 @@ export class Sprite {
         }
       }
 
-      // Return true if every dot product projection overlaps.
+      // Check if dot product projection overlaps. Check next if true.
       if (
         (dotProductMin > targetDotProductMin && dotProductMin < targetDotProductMax) ||
         (dotProductMax > targetDotProductMin && dotProductMax < targetDotProductMax)
@@ -378,18 +367,18 @@ export class Sprite {
    *
    */
   #getVertex(x, y) {
-    const currentAngleInRadians = (this.angle * Math.PI) / 180
+    const currentAngleInRadians = (this.rotation.angle * Math.PI) / 180
 
     const distanceToVertex = this.distanceTo({ x: x, y: y })
     const angleToVertex = (this.angleTo({ x: x, y: y }) * Math.PI) / 180
 
     return {
       x:
-        this.x +
+        this.position.x +
         this.width / 2 +
         distanceToVertex * Math.cos(currentAngleInRadians + angleToVertex),
       y:
-        this.y +
+        this.position.y +
         this.height / 2 +
         distanceToVertex * Math.sin(currentAngleInRadians + angleToVertex)
     }
@@ -410,6 +399,51 @@ export class Sprite {
         y: this.vertices.v4.y - this.vertices.v3.y
       },
       e4: { x: this.vertices.v1.x - this.vertices.v4.x, y: this.vertices.v4.y - this.vertices.v1.y }
+    }
+  }
+
+  #updateVelocity() {
+    this.velocity.x += this.acceleration.x
+    this.velocity.y += this.acceleration.y
+  }
+
+  #applyFriction() {
+    let speed = Math.hypot(this.velocity.x, this.velocity.y)
+
+    if (speed > this.friction) {
+      speed -= this.friction
+    } else {
+      speed = 0
+    }
+
+    this.velocity.x = Math.cos((this.rotation.angle * Math.PI) / 180) * speed
+    this.velocity.y = Math.sin((this.rotation.angle * Math.PI) / 180) * speed
+  }
+
+  #updateRotation() {
+    this.rotation.angle += this.rotation.speed
+    if (this.rotation.angle >= 360 || this.rotation.angle <= -360) this.rotation.angle = 0
+  }
+
+  #updatePosition() {
+    this.position.x += this.velocity.x
+    this.position.y += this.velocity.y
+  }
+
+  #updateFrame() {
+    this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
+    this.currentTime = Date.now()
+    let elapsedTime = this.currentTime - this.startTime
+    if (elapsedTime > this.fpsInterval) {
+      if (
+        this.currentFrameIndex >=
+        (this.currentAnimation.images.length - 1 || this.currentAnimation.images.frameCount)
+      ) {
+        this.currentFrameIndex = 0
+      }
+
+      this.currentFrameIndex++
+      this.startTime = this.currentTime
     }
   }
 }
