@@ -47,6 +47,14 @@ export class Sprite {
       speed: options.rotation.speed
     }
 
+    // Defaults to window dimensions.
+    this.bounds = {
+      minimumX: 0,
+      maximumX: innerWidth,
+      minimumY: 0,
+      maximumY: innerHeight
+    }
+
     /* this.image = {
       type: options.image.type,
       src: options.image.src
@@ -79,27 +87,11 @@ export class Sprite {
 
     this.edges = this.#getEdges()
 
-    /* if(!this.canWalkOffCanvas) {
-        if (this.position.x <= this.canvas.offsetLeft) {
-          this.position.x = this.canvas.offsetLeft
-        } else {
-          this.position.x += this.velocityX
-        }
-        if (this.position.x >= this.canvas.offsetLeft + this.canvas.width) {
-
-        }
-         else if (this.position.y <= this.canvas.offsetTop || this.position.y >= this.canvas.offsetTop + this.canvas.height) {
-          
-        }
-      } */
-
     this.#updateVelocity()
-
     this.#applyFriction()
     this.#updateRotation()
     this.#updatePosition()
     this.#updateFrame()
-
     this.#draw()
   }
 
@@ -113,15 +105,27 @@ export class Sprite {
     if (this.flipX || this.flipY) {
       this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
       this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
-      this.context.translate(-(this.position.x + this.width / 2), -(this.position.y + this.height / 2))
+      this.context.translate(
+        -(this.position.x + this.width / 2),
+        -(this.position.y + this.height / 2)
+      )
     }
 
     this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
     this.context.rotate((this.rotation.angle * Math.PI) / 180)
 
-    this.context.translate(-(this.position.x + this.width / 2), -(this.position.y + this.height / 2))
+    this.context.translate(
+      -(this.position.x + this.width / 2),
+      -(this.position.y + this.height / 2)
+    )
     //this.context.fillRect(this.position.x, this.position.y, this.width, this.height)
-    this.context.drawImage(this.currentFrame, this.position.x, this.position.y, this.width, this.height)
+    this.context.drawImage(
+      this.currentFrame,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height
+    )
 
     this.context.restore()
   }
@@ -151,7 +155,6 @@ export class Sprite {
       name: name,
       images: frames
     }
-
   }
 
   /**
@@ -188,7 +191,6 @@ export class Sprite {
     this.acceleration.x = accelerationX * Math.cos((this.rotation.angle * Math.PI) / 180)
     this.acceleration.y = accelerationY * Math.sin((this.rotation.angle * Math.PI) / 180)
   }
-
 
   /**
    * Sets rotationspeed.
@@ -246,7 +248,7 @@ export class Sprite {
 
   /**
    * Sets property to flip sprite.
-   * 
+   *
    * @param {Boolean} flipX - Horizontal flip.
    * @param {Boolean} flipY - Vertical flip.
    */
@@ -360,8 +362,12 @@ export class Sprite {
 
   /**
    * Sets movement boundaries.
+   *
+   * @param {Object} bounds - Object of bounding values. { minimumX: Number, maximumX: Number, minimumY: Number, maximumY: Number }
    */
-  setBoundaries() {}
+  setBoundingBox(bounds) {
+    this.bounds = bounds
+  }
 
   /**
    *
@@ -426,15 +432,48 @@ export class Sprite {
   }
 
   #updatePosition() {
-    this.position.x += this.velocity.x
-    this.position.y += this.velocity.y
+    let minimumSpriteX = null
+    let maximumSpriteX = null
+    let minimumSpriteY = null
+    let maximumSpriteY = null
+
+    // Get maximum and minimum coordinates for sprite.
+    for (const vertex in this.vertices) {
+      if (minimumSpriteX === null || this.vertices[vertex].x < minimumSpriteX) {
+        minimumSpriteX = this.vertices[vertex].x
+      }
+      if (maximumSpriteX === null || this.vertices[vertex].x > maximumSpriteX) {
+        maximumSpriteX = this.vertices[vertex].x
+      }
+      if (minimumSpriteY === null || this.vertices[vertex].y < minimumSpriteY) {
+        minimumSpriteY = this.vertices[vertex].y
+      }
+      if (maximumSpriteY === null || this.vertices[vertex].y > maximumSpriteY) {
+        maximumSpriteY = this.vertices[vertex].y
+      }
+    }
+
+    // Compare to bounding box
+    if (minimumSpriteX < this.bounds.x.min) {
+      this.position.x += 1
+    } else if (maximumSpriteX > this.bounds.x.max) {
+      this.position.x -= 1
+    } else if (minimumSpriteY < this.bounds.y.min) {
+      this.position.y += 1
+    } else if (maximumSpriteY > this.bounds.y.max) {
+      this.position.y -= 1
+    } else {
+      // Move as usual
+      this.position.x += this.velocity.x
+      this.position.y += this.velocity.y
+    }
   }
 
+  /**
+   * Sets new frame index from current animation loop.
+   */
   #updateFrame() {
-    this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
-    this.currentTime = Date.now()
-    let elapsedTime = this.currentTime - this.startTime
-    if (elapsedTime > this.fpsInterval) {
+    if (this.#hasReachedDelay()) {
       if (
         this.currentFrameIndex >=
         (this.currentAnimation.images.length - 1 || this.currentAnimation.images.frameCount)
@@ -443,7 +482,17 @@ export class Sprite {
       }
 
       this.currentFrameIndex++
-      this.startTime = this.currentTime
     }
+  }
+
+  #hasReachedDelay() {
+    this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
+    this.currentTime = Date.now()
+    let elapsedTime = this.currentTime - this.startTime
+    if (elapsedTime > this.fpsInterval) {
+      this.startTime = this.currentTime
+      return true
+    } 
+      return false
   }
 }

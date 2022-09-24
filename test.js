@@ -34,6 +34,7 @@ player.addAnimation({
 })
 
 player.setCurrentAnimation('Walk')
+player.setBoundingBox({ x: { min: 0, max: innerWidth }, y: { min: 0, max: innerHeight}}) 
 
 let keys = {
   left: { 
