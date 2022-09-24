@@ -37,8 +37,8 @@ export class Sprite {
       y: false
     }
 
-    this.vertices = {}
-    this.edges = {}
+    this._vertices = {}
+    this._edges = {}
 
     this.friction = options.friction
 
@@ -55,10 +55,6 @@ export class Sprite {
       maximumY: innerHeight
     }
 
-    /* this.image = {
-      type: options.image.type,
-      src: options.image.src
-    } */
     // Animation
     this.animations = {}
     this.currentAnimation = null
@@ -118,15 +114,17 @@ export class Sprite {
       -(this.position.x + this.width / 2),
       -(this.position.y + this.height / 2)
     )
-    //this.context.fillRect(this.position.x, this.position.y, this.width, this.height)
-    this.context.drawImage(
-      this.currentFrame,
-      this.position.x,
-      this.position.y,
-      this.width,
-      this.height
-    )
-
+    if (this.currentFrame) {
+      this.context.drawImage(
+        this.currentFrame,
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      )
+    } else {
+      this.context.fillRect(this.position.x, this.position.y, this.width, this.height)
+    }
     this.context.restore()
   }
 
@@ -174,11 +172,19 @@ export class Sprite {
    * Sets sprite velocty.
    *
    * @param {Number} velocityX - Horizontal velocity.
+   */
+  setVelocityX(velocityX) {
+    this.velocity.x = velocityX
+  }
+
+  /**
+   * Sets sprite velocty.
+   *
    * @param {Number} velocityY - Vertical velocity.
    */
-  setVelocity(velocityX, velocityY) {
-    this.velocity.x = velocityX
+  setVelocityY(velocityY) {
     this.velocity.y = velocityY
+
   }
 
   /**
@@ -188,8 +194,10 @@ export class Sprite {
    * @param {Number} accelerationY - Vertical acceleration.
    */
   setAcceleration(accelerationX, accelerationY) {
-    this.acceleration.x = accelerationX * Math.cos((this.rotation.angle * Math.PI) / 180)
-    this.acceleration.y = accelerationY * Math.sin((this.rotation.angle * Math.PI) / 180)
+    /* this.acceleration.x = accelerationX * Math.cos((this.rotation.angle * Math.PI) / 180)
+    this.acceleration.y = accelerationY * Math.sin((this.rotation.angle * Math.PI) / 180) */
+    this.acceleration.x = accelerationX
+    this.acceleration.y = accelerationY
   }
 
   /**
@@ -202,6 +210,18 @@ export class Sprite {
       throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
     }
     this.rotation.speed = value
+  }
+
+  /**
+   * Sets friction.
+   *
+   * @param {Number} value - Friction value which velocity decreases with.
+   */
+  setFriction(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': friction can only be number.`)
+    }
+    this.friction = value
   }
 
   /**
@@ -295,7 +315,7 @@ export class Sprite {
    * @param {Sprite} target - { x: Number, y: Number, vertices: [Object], edges: [Object]}
    */
   detectCollision(target) {
-    // Unrotated rectangles.
+    // Check unrotated collision.
     if (
       this.position.x + this.width >= target.x &&
       this.position.x <= target.x + target.width &&
@@ -370,13 +390,17 @@ export class Sprite {
   }
 
   /**
+   * Gets vertex coordinates of sprite in any rotation.
    *
+   * @param {Number} unrotatedX - X coordinate of vertex when unrotated.
+   * @param {Number} unrotatedY - Y coordinate of vertex when unrotated.
+   * @returns {Object} - x and y coordinates of vertex.
    */
-  #getVertex(x, y) {
+  #getVertex(unrotatedX, unrotatedY) {
     const currentAngleInRadians = (this.rotation.angle * Math.PI) / 180
 
-    const distanceToVertex = this.distanceTo({ x: x, y: y })
-    const angleToVertex = (this.angleTo({ x: x, y: y }) * Math.PI) / 180
+    const distanceToVertex = this.distanceTo({ x: unrotatedX, y: unrotatedY })
+    const angleToVertex = (this.angleTo({ x: unrotatedX, y: unrotatedY }) * Math.PI) / 180
 
     return {
       x:
@@ -390,11 +414,16 @@ export class Sprite {
     }
   }
 
+  /**
+   * Gets current edges of sprite.
+   *
+   * @returns {Object} - Containing vectors "drawn" between each vertex.
+   */
   #getEdges() {
     return {
       e1: {
         x: this.vertices.v2.x - this.vertices.v1.x,
-        y: this.vertices.v2.y - this.vertices.v2.y
+        y: this.vertices.v2.y - this.vertices.v1.y
       },
       e2: {
         x: this.vertices.v3.x - this.vertices.v2.x,
@@ -404,33 +433,39 @@ export class Sprite {
         x: this.vertices.v4.x - this.vertices.v3.x,
         y: this.vertices.v4.y - this.vertices.v3.y
       },
-      e4: { x: this.vertices.v1.x - this.vertices.v4.x, y: this.vertices.v4.y - this.vertices.v1.y }
+      e4: { x: this.vertices.v1.x - this.vertices.v4.x, y: this.vertices.v1.y - this.vertices.v4.y }
     }
   }
 
+  /**
+   * Updates sprite velocity.
+   */
   #updateVelocity() {
     this.velocity.x += this.acceleration.x
     this.velocity.y += this.acceleration.y
   }
 
+  /**
+   * Decreases sprite velocity over time.
+   */
   #applyFriction() {
-    let speed = Math.hypot(this.velocity.x, this.velocity.y)
-
-    if (speed > this.friction) {
-      speed -= this.friction
-    } else {
-      speed = 0
-    }
-
-    this.velocity.x = Math.cos((this.rotation.angle * Math.PI) / 180) * speed
-    this.velocity.y = Math.sin((this.rotation.angle * Math.PI) / 180) * speed
+    this.velocity.x *= this.friction
+    this.velocity.y *= this.friction
   }
 
+  /**
+   * Updates rotation angle with given speed.
+   */
   #updateRotation() {
+    if (this.rotation.angle) {
     this.rotation.angle += this.rotation.speed
-    if (this.rotation.angle >= 360 || this.rotation.angle <= -360) this.rotation.angle = 0
+    if (this.rotation.angle && this.rotation.angle >= 360 || this.rotation.angle <= -360) this.rotation.angle = 0
+    }
   }
 
+  /**
+   * Updates sprite position.
+   */
   #updatePosition() {
     let minimumSpriteX = null
     let maximumSpriteX = null
@@ -456,16 +491,27 @@ export class Sprite {
     // Compare to bounding box
     if (minimumSpriteX < this.bounds.x.min) {
       this.position.x += 1
+      this.velocity.x = 0
     } else if (maximumSpriteX > this.bounds.x.max) {
       this.position.x -= 1
+      this.velocity.x = 0
     } else if (minimumSpriteY < this.bounds.y.min) {
       this.position.y += 1
+      this.velocity.y = 0
     } else if (maximumSpriteY > this.bounds.y.max) {
       this.position.y -= 1
+      this.velocity.y = 0
     } else {
       // Move as usual
-      this.position.x += this.velocity.x
-      this.position.y += this.velocity.y
+      if (this.rotation.angle === null) {
+        
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
+      } else {
+        console.log(this.rotation)
+        this.position.x += this.velocity.x * Math.cos((this.rotation.angle * Math.PI) / 180)
+        this.position.y += this.velocity.y * Math.sin((this.rotation.angle * Math.PI) / 180)
+      }
     }
   }
 
@@ -485,6 +531,11 @@ export class Sprite {
     }
   }
 
+  /**
+   * Checks if render delay is reached
+   *
+   * @returns {Boolean} - True if delay is reached.
+   */
   #hasReachedDelay() {
     this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
     this.currentTime = Date.now()
@@ -492,7 +543,7 @@ export class Sprite {
     if (elapsedTime > this.fpsInterval) {
       this.startTime = this.currentTime
       return true
-    } 
-      return false
+    }
+    return false
   }
 }
