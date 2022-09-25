@@ -1,8 +1,8 @@
 # Mall för inlämning laboration 1, 1dv610
 ​
 ## Checklista
-  - [ ] Jag har skrivit all kod och reflektioner själv. Jag har inte använt mig av andras kod för att lösa uppgiften.
-  - [ ] Mina testresultat är skrivna utifrån utförd testning ( och inte teoretiskt: "det bör fungera" :) )
+  - [x] Jag har skrivit all kod och reflektioner själv. Jag har inte använt mig av andras kod för att lösa uppgiften.
+  - [x] Mina testresultat är skrivna utifrån utförd testning ( och inte teoretiskt: "det bör fungera" :) )
   - [x] Koden är objektorienterad
   - [x] Jag har skrivit en modul som riktar sig till programmerare
 ​
@@ -12,8 +12,8 @@
     - [x] De flesta testfall fungerar
     - [x] Koden är förberedd på Återanvändning
     - [x] All kod samt historik finns i git 
-    - [] Kodkvaliterskraven är ifyllda
-    - [ ] Reflektion är skriven utifrån bokens kapitel 
+    - [x] Kodkvaliterskraven är ifyllda
+    - [x] Reflektion är skriven utifrån bokens kapitel 
   - [ ] Jag eftersträvar med denna inlämning högre betyg (C-B) och anser mig uppfylla alla extra krav för detta. 
     - [ ] Samtliga testfall är skrivna    
     - [ ] Testfall är automatiserade
@@ -24,6 +24,11 @@
 Förtydligande: Examinator kommer sätta betyg oberoende på vad ni anser. 
 ​
 ## Återanvändning
+Min modul är skapad för att underlätta för andra programmerare att skapa egna spelar-objekt i HTML Canvas. Målet har vart att komma på en generell lösning för olika typer av 2D-spel,
+vilket gör att modulen kan betraktas som en slags boilerplate för skapande av spelar-objekt. HuvudKlassen består utav ett urval av attribut och metoder som ofta förekommer i spel.
+
+Instruktioner med exempel på hur denna modul används återfinns i README.md
+
 Beskriv hur du anpassat din kod och instruktioner för att någon annan programmerare skall kunna använda din modul. Om du skrivit instruktioner för din användare, länka till dessa. Om inte, beskriv här hur någon skall göra för att använda din modul.
 ​
 ## Beskrivning av min kod

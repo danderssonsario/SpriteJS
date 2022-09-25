@@ -12,12 +12,16 @@ const options = {
   width: 100,
   height: 100,
   friction: 1,
-  rotation: { angle: null, speed: 0},
+  rotation: { angle: 0, speed: 0},
+  frame: { width: 50, height: 50}
 }
-const player = new Sprite('player', context, options)
-//const player2 = new Sprite('player2', context, {x: 50, y: 200})
 
-player.addAnimation({
+
+
+const player = new Sprite('player', context, options)
+//const player2 = new Sprite('player2', context, options2)
+
+/* player.addAnimation({
   name: 'Walk',
   images: {
     src: [
@@ -31,6 +35,12 @@ player.addAnimation({
       './png/Run (8).png'
     ]
   }
+}) */
+
+player.addAnimation({
+  name: 'Walk',
+  frameCount: 8,
+  rowIndex: 3
 })
 
 player.setCurrentAnimation('Walk')
@@ -88,35 +98,38 @@ addEventListener('keyup', ({ key }) => {
   }
 })
 
+player.VelocityX = 1
 
-/**
+
+/* *
  * Sprite loop.
  */
 function animate() {
   requestAnimationFrame(animate)
   context.clearRect(0, 0, canvas.width, canvas.height)
 
-  player.update()
+  //player.update()
+  //player2.update()
+  
+/*   player.setFriction(0.98)
+  player.setAcceleration(0, 0)
+  player.setRotationSpeed(0)
 
   if (keys.left.pressed) {
-    player.setVelocityX(-5)
-    player.setVelocityY(0)
+    player.setRotationSpeed(-5)
   }
 
   if (keys.right.pressed) {
-    player.setVelocityX(5)
-    player.setVelocityY(0)
+    player.setRotationSpeed(5)
   }
 
   if (keys.up.pressed) {
-    player.setVelocityY(-5)
-    player.setVelocityX(0)
+    player.setAcceleration(0.05, 0.05)
   }
 
   if (keys.down.pressed) {
-    player.setVelocityY(5)
-    player.setVelocityX(0)
-  }
+    player.setAcceleration(-0.05, -0.05)
+  } */
 
 }
 

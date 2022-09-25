@@ -1,4 +1,19 @@
+import { Animation } from "./Animation.js"
+
 export class Sprite {
+  #velocity = {
+    x: 0,
+    y: 0
+  }
+  #acceleration = {
+  x:0,
+  y: 0
+  }
+  #rotation = {
+    angle: 0,
+    speed: 0
+  }
+
   /**
    *
    * @param {String} name - Identifier for errors.
@@ -8,11 +23,13 @@ export class Sprite {
    * @param {Number} y - Y coordinate of sprite object.
    * @param {Number} width - Width of sprite object.
    * @param {Number} height - Height of sprite object.
+   * @param {Number}
    */
   constructor(name, context, options) {
+    
     this.name = name
     this.context = context
-
+    this.#acceleration.x = 0
     // Physical properties
     this.position = {
       x: options.position.x,
@@ -22,23 +39,13 @@ export class Sprite {
     this.width = options.width
     this.height = options.height
 
-    this.velocity = {
-      x: options.velocity.x,
-      y: options.velocity.y
-    }
-
-    this.acceleration = {
-      x: options.acceleration.x,
-      y: options.acceleration.y
-    }
-
     this.flip = {
       x: false,
       y: false
     }
 
-    this._vertices = {}
-    this._edges = {}
+    this.vertices = {}
+    this.edges = {}
 
     this.friction = options.friction
 
@@ -49,18 +56,16 @@ export class Sprite {
 
     // Defaults to window dimensions.
     this.bounds = {
-      minimumX: 0,
-      maximumX: innerWidth,
-      minimumY: 0,
-      maximumY: innerHeight
+      x: { min: 0, max: innerWidth },
+      y: { min: 0, max: innerHeight }
     }
 
     // Animation
     this.animations = {}
-    this.currentAnimation = null
+    this.currentAnimation = {}
 
     // Current (Animation = one or more frames)
-    this.currentFrame = {}
+    this.currentFrame = null
     this.currentFrameIndex = 0
 
     // Render delay control.
@@ -68,6 +73,22 @@ export class Sprite {
     this.currentTime = 0
     this.startTime = Date.now()
     this.fpsInterval = 1000
+
+    let image = new Image()
+    image.src = '../player.png'
+
+    this.spriteSheet = {
+      width: 368,
+      height: 200,
+      src: image
+    }
+
+    this.frame = {
+      width: options.frame.width,
+      height: options.frame.height,
+
+    }
+    
   }
 
   /**
@@ -108,15 +129,20 @@ export class Sprite {
     }
 
     this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
-    this.context.rotate((this.rotation.angle * Math.PI) / 180)
+    this.context.rotate((this.#rotation.angle * Math.PI) / 180)
 
     this.context.translate(
       -(this.position.x + this.width / 2),
       -(this.position.y + this.height / 2)
     )
+ 
     if (this.currentFrame) {
       this.context.drawImage(
-        this.currentFrame,
+        this.spriteSheet.src,
+        this.currentFrame.x,
+        this.currentFrame.y,
+        this.frame.width,
+        this.frame.height,
         this.position.x,
         this.position.y,
         this.width,
@@ -131,28 +157,31 @@ export class Sprite {
   /**
    * Adds animation loop to sprite instance.
    *
-   * @param {Object} options - { name: String, image: { src: [String] } }.
+   * @param {Object} options - { name: String, image: { type: 'array', src: [String] } }.
    */
   addAnimation(options) {
-    const { name, images } = options
+    const { name, frameCount, rowIndex } = options
 
     if (this.animations[name]) {
       throw new Error(`Sprite '${this.name}': animation '${name}' already exists.`)
     }
 
+    this.animations[name] = new Animation(this.spriteSheet, this.frame.width, this.frame.height, frameCount, rowIndex)
+    this.animations[name].generateFrames(this.frame.width, this.frame.height, frameCount, rowIndex)
+
     let frames = []
 
-    for (let i = 0; i < images.src.length; i++) {
-      const image = new Image()
-      image.src = images.src[i]
-
-      frames.push(image)
+    for (let i = 0; i < frameCount - 1; i++) {
+      const frameData = { x: i * this.frame.width, y: rowIndex * this.frame.height }
+      frames.push(frameData)
     }
 
-    this.animations[name] = {
+    /* this.animations[name] = {
       name: name,
       images: frames
-    }
+    } */
+    console.log(this.animations[name])
+
   }
 
   /**
@@ -173,8 +202,8 @@ export class Sprite {
    *
    * @param {Number} velocityX - Horizontal velocity.
    */
-  setVelocityX(velocityX) {
-    this.velocity.x = velocityX
+  set VelocityX(velocityX) {
+    this.#velocity.x = velocityX
   }
 
   /**
@@ -182,22 +211,29 @@ export class Sprite {
    *
    * @param {Number} velocityY - Vertical velocity.
    */
-  setVelocityY(velocityY) {
-    this.velocity.y = velocityY
-
+  set VelocityY(velocityY) {
+    this.#velocity.y = velocityY
   }
 
   /**
    * Sets sprite acceleration.
    *
    * @param {Number} accelerationX - Horizontal acceleration.
+   */
+  set AccelerationX(accelerationX) {
+    /* this.#acceleration.x = accelerationX * Math.cos((this.#rotation.angle * Math.PI) / 180)
+    this.#acceleration.y = accelerationY * Math.sin((this.#rotation.angle * Math.PI) / 180) */
+    this.#acceleration.x = accelerationX
+  }
+  /**
+   * Sets sprite acceleration.
+   *
    * @param {Number} accelerationY - Vertical acceleration.
    */
-  setAcceleration(accelerationX, accelerationY) {
-    /* this.acceleration.x = accelerationX * Math.cos((this.rotation.angle * Math.PI) / 180)
-    this.acceleration.y = accelerationY * Math.sin((this.rotation.angle * Math.PI) / 180) */
-    this.acceleration.x = accelerationX
-    this.acceleration.y = accelerationY
+  set AccelerationY(accelerationY) {
+    /* this.#acceleration.x = accelerationX * Math.cos((this.#rotation.angle * Math.PI) / 180)
+    this.#acceleration.y = accelerationY * Math.sin((this.#rotation.angle * Math.PI) / 180) */
+    this.#acceleration.y = accelerationY
   }
 
   /**
@@ -209,7 +245,7 @@ export class Sprite {
     if (typeof value !== 'number') {
       throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
     }
-    this.rotation.speed = value
+    this.#rotation.speed = value
   }
 
   /**
@@ -317,10 +353,10 @@ export class Sprite {
   detectCollision(target) {
     // Check unrotated collision.
     if (
-      this.position.x + this.width >= target.x &&
-      this.position.x <= target.x + target.width &&
-      this.position.y + this.height >= target.y &&
-      this.position.y <= target.y + target.height
+      this.position.x + this.width >= target.position.x &&
+      this.position.x <= target.position.x + target.width &&
+      this.position.y + this.height >= target.position.y &&
+      this.position.y <= target.position.y + target.height
     ) {
       return true
     }
@@ -397,7 +433,7 @@ export class Sprite {
    * @returns {Object} - x and y coordinates of vertex.
    */
   #getVertex(unrotatedX, unrotatedY) {
-    const currentAngleInRadians = (this.rotation.angle * Math.PI) / 180
+    const currentAngleInRadians = (this.#rotation.angle * Math.PI) / 180
 
     const distanceToVertex = this.distanceTo({ x: unrotatedX, y: unrotatedY })
     const angleToVertex = (this.angleTo({ x: unrotatedX, y: unrotatedY }) * Math.PI) / 180
@@ -441,25 +477,26 @@ export class Sprite {
    * Updates sprite velocity.
    */
   #updateVelocity() {
-    this.velocity.x += this.acceleration.x
-    this.velocity.y += this.acceleration.y
+    this.#velocity.x += this.#acceleration.x
+    this.#velocity.y += this.#acceleration.y
   }
 
   /**
    * Decreases sprite velocity over time.
    */
   #applyFriction() {
-    this.velocity.x *= this.friction
-    this.velocity.y *= this.friction
+    this.#velocity.x *= this.friction
+    this.#velocity.y *= this.friction
   }
 
   /**
    * Updates rotation angle with given speed.
    */
   #updateRotation() {
-    if (this.rotation.angle) {
-    this.rotation.angle += this.rotation.speed
-    if (this.rotation.angle && this.rotation.angle >= 360 || this.rotation.angle <= -360) this.rotation.angle = 0
+    if (this.rotation) {
+      this.#rotation.angle += this.#rotation.speed
+      if ((this.#rotation.angle && this.#rotation.angle >= 360) || this.#rotation.angle <= -360)
+        this.#rotation.angle = 0
     }
   }
 
@@ -491,26 +528,24 @@ export class Sprite {
     // Compare to bounding box
     if (minimumSpriteX < this.bounds.x.min) {
       this.position.x += 1
-      this.velocity.x = 0
+      this.#velocity.x = 0
     } else if (maximumSpriteX > this.bounds.x.max) {
       this.position.x -= 1
-      this.velocity.x = 0
+      this.#velocity.x = 0
     } else if (minimumSpriteY < this.bounds.y.min) {
       this.position.y += 1
-      this.velocity.y = 0
+      this.#velocity.y = 0
     } else if (maximumSpriteY > this.bounds.y.max) {
       this.position.y -= 1
-      this.velocity.y = 0
+      this.#velocity.y = 0
     } else {
       // Move as usual
-      if (this.rotation.angle === null) {
-        
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
+      if (this.#rotation.angle === null) {
+        this.position.x += this.#velocity.x
+        this.position.y += this.#velocity.y
       } else {
-        console.log(this.rotation)
-        this.position.x += this.velocity.x * Math.cos((this.rotation.angle * Math.PI) / 180)
-        this.position.y += this.velocity.y * Math.sin((this.rotation.angle * Math.PI) / 180)
+        this.position.x += this.#velocity.x * Math.cos((this.#rotation.angle * Math.PI) / 180)
+        this.position.y += this.#velocity.y * Math.sin((this.#rotation.angle * Math.PI) / 180)
       }
     }
   }
@@ -519,16 +554,20 @@ export class Sprite {
    * Sets new frame index from current animation loop.
    */
   #updateFrame() {
-    if (this.#hasReachedDelay()) {
-      if (
-        this.currentFrameIndex >=
-        (this.currentAnimation.images.length - 1 || this.currentAnimation.images.frameCount)
-      ) {
-        this.currentFrameIndex = 0
+    if (this.currentAnimation) {
+      this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
+      if (this.#hasReachedDelay()) {
+        if (
+          this.currentFrameIndex >=
+          this.currentAnimation.images.length - 1
+        ) {
+          this.currentFrameIndex = 0
+        } else {
+        this.currentFrameIndex++
+        }
       }
-
-      this.currentFrameIndex++
     }
+
   }
 
   /**
@@ -537,7 +576,6 @@ export class Sprite {
    * @returns {Boolean} - True if delay is reached.
    */
   #hasReachedDelay() {
-    this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
     this.currentTime = Date.now()
     let elapsedTime = this.currentTime - this.startTime
     if (elapsedTime > this.fpsInterval) {
@@ -546,4 +584,6 @@ export class Sprite {
     }
     return false
   }
+
+  #isValid(type, input) {}
 }

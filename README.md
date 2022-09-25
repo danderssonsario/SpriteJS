@@ -178,7 +178,7 @@ const options = {
   width: 100,
   height: 100,
   friction: 0,
-  rotation: { angle: 0, speed: 0},
+  rotation: null,
 }
 
 const player = new Sprite('player', context, options)
@@ -240,7 +240,7 @@ function animate() {
   context.clearRect(0, 0, canvas.width, canvas.height)
 
   player.update()
-  
+
   if(keys.left.pressed) {
     player.setVelocityX(-5)
     player.setVelocityY(0)
