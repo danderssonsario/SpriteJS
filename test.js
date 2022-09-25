@@ -13,6 +13,7 @@ const options = {
   height: 100,
   friction: 1,
   rotation: { angle: 0, speed: 0},
+  image: '../player.png',
   frame: { width: 46, height: 50}
 }
 

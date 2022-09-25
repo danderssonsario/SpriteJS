@@ -1,4 +1,5 @@
 import { Animation } from "./Animation.js"
+import { Renderer } from './Renderer.js'
 
 export class Sprite {
   #velocity = {
@@ -26,7 +27,7 @@ export class Sprite {
    * @param {Number}
    */
   constructor(name, context, options) {
-    
+    this.renderer = new Renderer(context, options.position, options.width, options.height)
     this.name = name
     this.context = context
     this.#acceleration.x = 0
@@ -75,18 +76,12 @@ export class Sprite {
     this.fpsInterval = 1000
 
     let image = new Image()
-    image.src = '../player.png'
-
-    this.spriteSheet = {
-      width: 368,
-      height: 200,
-      src: image
-    }
+    image.src = options.image
+    this.image = image
 
     this.frame = {
       width: options.frame.width,
       height: options.frame.height,
-
     }
     
   }
@@ -110,32 +105,11 @@ export class Sprite {
     this.#updatePosition()
     this.#updateFrame()
     
-    this.#draw()
-  }
-
-  /**
-   * Draws current frame to canvas.
-   */
-  #draw() {
-    this.context.save()
-    this.#adjustContext()
-
-    if (this.currentFrame) {
-      this.context.drawImage(
-        this.spriteSheet.src,
-        this.currentFrame.offsetX,
-        this.currentFrame.offsetY,
-        this.frame.width,
-        this.frame.height,
-        this.position.x,
-        this.position.y,
-        this.width,
-        this.height
-      )
-    } else {
-      this.context.fillRect(this.position.x, this.position.y, this.width, this.height)
-    }
-    this.context.restore()
+    // Draw frame
+    this.renderer.flip(this.flipX, this.flipY)
+    this.renderer.rotate(this.rotation.angle)
+    this.renderer.draw(this.currentFrame)
+    
   }
 
   /**
@@ -150,7 +124,7 @@ export class Sprite {
       throw new Error(`Sprite '${this.name}': animation '${name}' already exists.`)
     }
 
-    this.animations[name] = new Animation(this.spriteSheet, this.frame.width, this.frame.height, frameCount, rowIndex)
+    this.animations[name] = new Animation(this.image, this.frame.width, this.frame.height, frameCount, rowIndex)
     this.animations[name].generateFrames()
 
   }
@@ -539,27 +513,6 @@ export class Sprite {
       }
     }
 
-  }
-
-  #adjustContext() {
-    // Flips context if toggled.
-    if (this.flipX || this.flipY) {
-      this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
-      this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
-      this.context.translate(
-        -(this.position.x + this.width / 2),
-        -(this.position.y + this.height / 2)
-      )
-    }
-
-    // Rotates context
-    this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
-    this.context.rotate((this.#rotation.angle * Math.PI) / 180)
-
-    this.context.translate(
-      -(this.position.x + this.width / 2),
-      -(this.position.y + this.height / 2)
-    )
   }
 
   /**
