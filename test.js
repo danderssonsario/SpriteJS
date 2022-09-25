@@ -6,15 +6,11 @@ canvas.height = innerHeight
 const context = canvas.getContext('2d')
 
 const options = {
-  position: {x: 50, y: innerHeight/2},
-  velocity: {x: 0, y: 0},
-  acceleration: {x: 0, y: 0},
+  positionX: 50,
+  positionY: innerHeight/2,
   width: 100,
   height: 100,
-  friction: 1,
-  rotation: { angle: 0, speed: 0},
   image: '../player.png',
-  frame: { width: 46, height: 50}
 }
 
 
@@ -40,11 +36,15 @@ const player = new Sprite('player', context, options)
 
 player.addAnimation({
   name: 'Walk',
+  frameWidth: 46,
+  frameHeight: 50,
   frameCount: 8,
-  rowIndex: 3
+  rowIndex: 3,
 })
 
 player.setCurrentAnimation('Walk')
+player.VelocityX = 1
+
 player.setBoundingBox({ x: { min: 0, max: innerWidth }, y: { min: 0, max: innerHeight}}) 
 
 let keys = {

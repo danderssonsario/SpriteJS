@@ -1,21 +1,19 @@
 export class Renderer {
-  constructor(context, position, width, height) {
+  constructor(context, positionX, positionY, width, height) {
     this.context = context
-    this.position = {
-      x: position.x,
-      y: position.y
-    }
+    this.positionX = positionX
+    this.positionY = positionY
     this.width = width
     this.height = height
   }
 
   rotate(angle) {
-    this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
+    this.context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
     this.context.rotate((angle * Math.PI) / 180)
 
     this.context.translate(
-      -(this.position.x + this.width / 2),
-      -(this.position.y + this.height / 2))
+      -(this.positionX + this.width / 2),
+      -(this.positionY + this.height / 2))
   }
 
   /**
@@ -23,11 +21,11 @@ export class Renderer {
    */
   flip(x, y) {
     if (x || y) {
-      this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
+      this.context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
       this.context.scale(x ? -1 : 1, y ? -1 : 1)
       this.context.translate(
-        -(this.position.x + this.width / 2),
-        -(this.position.y + this.height / 2)
+        -(this.positionX + this.width / 2),
+        -(this.positionY + this.height / 2)
       )
     }
   }
@@ -41,13 +39,13 @@ export class Renderer {
         frame.offsetY,
         frame.width,
         frame.height,
-        this.position.x,
-        this.position.y,
+        this.positionX,
+        this.positionY,
         this.width,
         this.height
       )
     } else {
-      this.context.fillRect(this.position.x, this.position.y, this.width, this.height)
+      this.context.fillRect(this.positionX, this.positionY, this.width, this.height)
     }
     this.context.restore()
   }
