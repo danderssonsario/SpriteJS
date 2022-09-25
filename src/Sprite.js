@@ -109,6 +109,7 @@ export class Sprite {
     this.#updateRotation()
     this.#updatePosition()
     this.#updateFrame()
+    
     this.#draw()
   }
 
@@ -117,30 +118,13 @@ export class Sprite {
    */
   #draw() {
     this.context.save()
+    this.#adjustContext()
 
-    // Flips context if toggled.
-    if (this.flipX || this.flipY) {
-      this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
-      this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
-      this.context.translate(
-        -(this.position.x + this.width / 2),
-        -(this.position.y + this.height / 2)
-      )
-    }
-
-    this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
-    this.context.rotate((this.#rotation.angle * Math.PI) / 180)
-
-    this.context.translate(
-      -(this.position.x + this.width / 2),
-      -(this.position.y + this.height / 2)
-    )
- 
     if (this.currentFrame) {
       this.context.drawImage(
         this.spriteSheet.src,
-        this.currentFrame.x,
-        this.currentFrame.y,
+        this.currentFrame.offsetX,
+        this.currentFrame.offsetY,
         this.frame.width,
         this.frame.height,
         this.position.x,
@@ -167,20 +151,7 @@ export class Sprite {
     }
 
     this.animations[name] = new Animation(this.spriteSheet, this.frame.width, this.frame.height, frameCount, rowIndex)
-    this.animations[name].generateFrames(this.frame.width, this.frame.height, frameCount, rowIndex)
-
-    let frames = []
-
-    for (let i = 0; i < frameCount - 1; i++) {
-      const frameData = { x: i * this.frame.width, y: rowIndex * this.frame.height }
-      frames.push(frameData)
-    }
-
-    /* this.animations[name] = {
-      name: name,
-      images: frames
-    } */
-    console.log(this.animations[name])
+    this.animations[name].generateFrames()
 
   }
 
@@ -555,11 +526,11 @@ export class Sprite {
    */
   #updateFrame() {
     if (this.currentAnimation) {
-      this.currentFrame = this.currentAnimation.images[this.currentFrameIndex]
+      this.currentFrame = this.currentAnimation.frames[this.currentFrameIndex]
       if (this.#hasReachedDelay()) {
         if (
           this.currentFrameIndex >=
-          this.currentAnimation.images.length - 1
+          this.currentAnimation.frames.length - 1
         ) {
           this.currentFrameIndex = 0
         } else {
@@ -568,6 +539,27 @@ export class Sprite {
       }
     }
 
+  }
+
+  #adjustContext() {
+    // Flips context if toggled.
+    if (this.flipX || this.flipY) {
+      this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
+      this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
+      this.context.translate(
+        -(this.position.x + this.width / 2),
+        -(this.position.y + this.height / 2)
+      )
+    }
+
+    // Rotates context
+    this.context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
+    this.context.rotate((this.#rotation.angle * Math.PI) / 180)
+
+    this.context.translate(
+      -(this.position.x + this.width / 2),
+      -(this.position.y + this.height / 2)
+    )
   }
 
   /**

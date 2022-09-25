@@ -13,7 +13,7 @@ const options = {
   height: 100,
   friction: 1,
   rotation: { angle: 0, speed: 0},
-  frame: { width: 50, height: 50}
+  frame: { width: 46, height: 50}
 }
 
 
@@ -108,7 +108,7 @@ function animate() {
   requestAnimationFrame(animate)
   context.clearRect(0, 0, canvas.width, canvas.height)
 
-  //player.update()
+  player.update()
   //player2.update()
   
 /*   player.setFriction(0.98)

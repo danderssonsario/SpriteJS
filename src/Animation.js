@@ -1,19 +1,20 @@
-export class Animation {
+import { Frame } from './Frame.js'
+
+export class Animation extends Frame {
   constructor(image, frameWidth, frameHeight, frameCount, rowIndex) {
-    
+    super(frameWidth, frameHeight)
     this.image = image
-    /* this.frameWidth = frameWidth
+    this.frameWidth = frameWidth
     this.frameHeight = frameHeight
     this.frameCount = frameCount
-    this.rowIndex = rowIndex */
-    this.frameData = []
+    this.rowIndex = rowIndex 
+    this.frames = []
   }
 
-  generateFrames(frameWidth, frameHeight, frameCount, rowIndex) {
-    
-    for (let i = 0; i < frameCount; i++) {
-      console.log('hej')
-      this.frameData.push({ width: frameWidth, height: frameHeight, offsetX: frameWidth * i, offsetY: frameHeight * rowIndex})
+  generateFrames() {
+    for (let i = 0; i < this.frameCount; i++) {
+      this.frames.push({ width: this.frameWidth, height: this.frameHeight, offsetX: this.frameWidth * i, offsetY: this.frameHeight * this.rowIndex})
     }
   }
+
 }
