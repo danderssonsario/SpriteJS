@@ -1,8 +1,7 @@
 import { Animation } from './Animation.js'
 
 /**
- * @classdesc
- * Class to create game objects from.
+ * @classdesc - Class to create game objects from.
  */
 export class Sprite {
   // Private fields.
@@ -68,6 +67,7 @@ export class Sprite {
     // Rotation flag
     this.#canRotate = false
   }
+
   /**
    * Gets sprite width.
    *
@@ -111,27 +111,6 @@ export class Sprite {
   }
 
   /**
-   * Gets sprite width.
-   *
-   * @param {Number} value - height value.
-   */
-  get width() {
-    return this.#height
-  }
-
-  /**
-   * Sets sprite height.
-   *
-   * @param {Number} value - height value.
-   */
-  set width(value) {
-    if (typeof value !== 'number') {
-      throw new Error(`Sprite '${this.name}': height can only be a number.`)
-    }
-    this.#height = value
-  }
-
-  /**
    * Gets sprite velocty.
    *
    * @returns {Number} velocityX - Horizontal velocity.
@@ -153,7 +132,7 @@ export class Sprite {
   }
 
   /**
-   * Sets sprite velocty.
+   * Sets sprite velocity.
    *
    * @param {Number} velocityY - Vertical velocity.
    */
@@ -189,9 +168,6 @@ export class Sprite {
     if (typeof accelerationX !== 'number') {
       throw new Error(`Sprite '${this.name}': acceleration can only be a number.`)
     }
-
-    /*this.accelerationX = accelerationX * Math.cos((this.angle * Math.PI) / 180)
-    this.accelerationY = accelerationY * Math.sin((this.angle * Math.PI) / 180) */
     this.#accelerationX = accelerationX
   }
 
@@ -211,8 +187,6 @@ export class Sprite {
     if (typeof accelerationY !== 'number') {
       throw new Error(`Sprite '${this.name}': acceleration can only be a number.`)
     }
-    /* this.accelerationX = accelerationX * Math.cos((this.angle * Math.PI) / 180)
-    this.accelerationY = accelerationY * Math.sin((this.angle * Math.PI) / 180) */
     this.#accelerationY = accelerationY
   }
 
@@ -224,7 +198,7 @@ export class Sprite {
   }
 
   /**
-   * Sets sprite position.
+   * Sets x position.
    *
    * @param {Number} positionX - Horizontal coordinate.
    */
@@ -243,9 +217,9 @@ export class Sprite {
   }
 
   /**
-   * Sets sprite position.
+   * Sets y position.
    *
-   * @param {Number} positionY - Horizontal coordinate.
+   * @param {Number} positionY - Vertical coordinate.
    */
   set positionY(positionY) {
     if (typeof positionY !== 'number') {
@@ -357,6 +331,28 @@ export class Sprite {
   }
 
   /**
+   * Sets angle.
+   *
+   * @param {Number} angle - angle in degrees.
+   */
+  set angle(value) {
+    this.#angle = value
+  }
+
+  /**
+   * Sets rotationspeed.
+   *
+   * @param {Number} value - Rotation speed value. Positive -> clockwise rotation.
+   */
+  set rotationSpeed(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
+    }
+    this.#canRotate = true
+    this.#rotationSpeed = value
+  }
+
+  /**
    * Updates sprite properties before drawing to canvas.
    */
   update() {
@@ -370,12 +366,9 @@ export class Sprite {
     this.edges = this.#getEdges()
 
     this.#updateVelocity()
-    this.#applyFriction()
     this.#updateRotation()
     this.#updatePosition()
     this.#updateFrame()
-
-    // Draw frame
     this.#updateContext()
   }
 
@@ -420,7 +413,7 @@ export class Sprite {
   }
 
   /**
-   * Rotates con
+   * Rotates context.
    */
   #rotateContext() {
     this.context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
@@ -449,19 +442,6 @@ export class Sprite {
       rowIndex
     )
     this.#animations[name].generateFrames()
-  }
-
-  /**
-   * Sets rotationspeed.
-   *
-   * @param {Number} value - Rotation speed value. Positive -> clockwise rotation.
-   */
-  set rotationSpeed(value) {
-    if (typeof value !== 'number') {
-      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
-    }
-    this.#canRotate = true
-    this.#rotationSpeed = value
   }
 
   /**
@@ -567,12 +547,10 @@ export class Sprite {
     return true
   }
 
-
-
   /**
    * Sets movement boundaries.
    *
-   * @param {Object} bounds - Object of bounding values. { minimumX: Number, maximumX: Number, minimumY: Number, maximumY: Number }
+   * @param {Object} bounds - Object of bounding values. { x: { max: Number, min: number }, y: { max: Number, min: Number} },  }
    */
   set bounds(bounds) {
     this.#bounds = bounds
@@ -586,10 +564,10 @@ export class Sprite {
    * @returns {Object} - x and y coordinates of vertex.
    */
   #getVertex(unrotatedX, unrotatedY) {
-    
     const currentAngleInRadians = (this.angle * Math.PI) / 180
     const distanceToVertex = this.distanceTo({ positionX: unrotatedX, positionY: unrotatedY })
-    const angleToVertex = (this.angleTo({ positionX: unrotatedX, positionY: unrotatedY }) * Math.PI) / 180
+    const angleToVertex =
+      (this.angleTo({ positionX: unrotatedX, positionY: unrotatedY }) * Math.PI) / 180
 
     return {
       x:
@@ -632,12 +610,6 @@ export class Sprite {
   #updateVelocity() {
     this.velocityX += this.accelerationX
     this.velocityY += this.accelerationY
-  }
-
-  /**
-   * Decreases sprite velocity over time.
-   */
-  #applyFriction() {
     this.velocityX *= this.friction
     this.velocityY *= this.friction
   }
