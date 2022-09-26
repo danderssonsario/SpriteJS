@@ -1,3 +1,7 @@
+/**
+ * Test Module.
+ */
+
 import { Sprite } from './src/Sprite.js'
 
 const canvas = document.querySelector('canvas')
@@ -7,30 +11,13 @@ const context = canvas.getContext('2d')
 
 const options = {
   positionX: 50,
-  positionY: innerHeight/2,
+  positionY: innerHeight / 2,
   width: 100,
   height: 100,
-  image: '../player.png',
+  image: '../player.png'
 }
 
 const player = new Sprite('player', context, options)
-
-/* player.addAnimation({
-  name: 'Walk',
-  images: {
-    src: [
-      './png/Run (1).png',
-      './png/Run (2).png',
-      './png/Run (3).png',
-      './png/Run (4).png',
-      './png/Run (5).png',
-      './png/Run (6).png',
-      './png/Run (7).png',
-      './png/Run (8).png'
-    ]
-  }
-}) */
-
 
 player.addAnimation({
   name: 'Walk',
@@ -38,32 +25,13 @@ player.addAnimation({
   frameHeight: 50,
   frameCount: 8,
   rowIndex: 3,
-  delayPerFrame: 1000,
+  delayPerFrame: 1000
 })
 
 player.setCurrentAnimation('Walk')
 
-player.velocityX = 10
-player.bounds = { x: { max: innerWidth, min: 0}, y: { max: innerHeight, min: 0 }}
-
-/*
- * Sprite loop.
- */
-function animate() {
-  requestAnimationFrame(animate)
-  context.clearRect(0, 0, canvas.width, canvas.height)
-
-  player.update()
-  
-
-}
-animate()
-/*
-player.VelocityX = 1
-player.bounds = { x: { min: 0, max: innerWidth }, y: { min: 0, max: innerHeight} }
-
 let keys = {
-  left: { 
+  left: {
     pressed: false
   },
   right: {
@@ -91,7 +59,7 @@ addEventListener('keydown', ({ key }) => {
       keys.up.pressed = true
       break
     default:
-      break;
+      break
   }
 })
 
@@ -114,37 +82,36 @@ addEventListener('keyup', ({ key }) => {
   }
 })
 
-player.VelocityX = 1 */
 
+/*
+ * Sprite loop.
+ */
+function animate() {
+  requestAnimationFrame(animate)
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  player.update()
 
-
-
-
-/*     if (keys.left.pressed) {
-      player.rotationSpeed = 1
-    }
-
-    if (keys.right.pressed) {
-      player.setRotationSpeed(5)
-    } */
-  //player2.update()
-  
-/*   player.setFriction(0.98)
-  player.setAcceleration(0, 0)
-  player.setRotationSpeed(0)
+  if (keys.up.pressed) {
+    player.velocityX = 0
+    player.velocityY = -5
+  }
 
   if (keys.left.pressed) {
-    player.setRotationSpeed(-5)
+    player.velocityX = -5
+    player.velocityY = 0
   }
 
   if (keys.right.pressed) {
-    player.setRotationSpeed(5)
-  }
-
-  if (keys.up.pressed) {
-    player.setAcceleration(0.05, 0.05)
+    player.velocityX = 5
+    player.velocityY = 0
   }
 
   if (keys.down.pressed) {
-    player.setAcceleration(-0.05, -0.05)
-  } */
+    player.velocityX = 0
+    player.velocityY = 5
+  }
+}
+animate()
+
+player.bounds = { x: { min: 0, max: innerWidth }, y: { min: 0, max: innerHeight } }
+
