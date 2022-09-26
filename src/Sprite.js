@@ -1,9 +1,11 @@
 import { Animation } from './Animation.js'
-import { Renderer } from './Renderer.js'
 
+/**
+ * @classdesc
+ * Class to create game objects from.
+ */
 export class Sprite {
-  #name
-  #context
+  // Private fields.
   #positionX
   #positionY
   #width
@@ -12,43 +14,39 @@ export class Sprite {
   #velocityY = 0
   #accelerationX = 0
   #accelerationY = 0
-  #angle = null
-  #rotationSpeed
+  #angle = 0
+  #rotationSpeed = 0
   #friction = 1
   #flipX = false
   #flipY = false
   #startTime = Date.now()
   #image
   #bounds
+
+  #currentFrame
+  #currentFrameIndex
+  #canRotate
+  #animations
+  #currentAnimation
   /**
    *
    * @param {String} name - Identifier for errors.
    * @param {CanvasRenderingContext2D} context - 2D rendering context for canvas element.
-   * @param {*} options - Configuration options parameters.
-   * @param {Number} x - X coordinate of sprite object.
-   * @param {Number} y - Y coordinate of sprite object.
-   * @param {Number} width - Width of sprite object.
-   * @param {Number} height - Height of sprite object.
-   * @param {Number}
+   * @param {Object} options - Configuration options parameters.
+   * @param {Number} PositionX - X coordinate of sprite object (options.positionX).
+   * @param {Number} PositionY - Y coordinate of sprite object (options.PositionY).
+   * @param {Number} width - Width of sprite object (options.width).
+   * @param {Number} height - Height of sprite object (options.height).
+   * @param {Number} image - Sprite sheet image path (options.image).
    */
   constructor(name, context, options) {
-    this.renderer = new Renderer(
-      context,
-      options.positionX,
-      options.positionY,
-      options.width,
-      options.height
-    )
-    this.#name = name
-    this.#context = context
-    this.#positionX = options.positionX
-    this.#positionY = options.positionY
-    this.#width = options.width
-    this.#height = options.height
-
-    let image = new Image()
-    image.src = options.image
-    this.#image = image
+    this.name = name
+    this.context = context
+    this.positionX = options.positionX
+    this.positionY = options.positionY
+    this.width = options.width
+    this.height = options.height
+    this.image = options.image
 
     this.vertices = {}
     this.edges = {}
@@ -60,21 +58,83 @@ export class Sprite {
     }
 
     // Animation
-    this.animations = {}
-    this.currentAnimation = {}
+    this.#animations = {}
+    this.#currentAnimation = null
 
     // Current (Animation = one or more frames)
-    this.currentFrame = null
-    this.currentFrameIndex = 0
+    this.#currentFrame = null
+    this.#currentFrameIndex = 0
 
-    // Render delay control.
-    this.delayPerFrame = 1000
+    // Rotation flag
+    this.#canRotate = false
+  }
+  /**
+   * Gets sprite width.
+   *
+   * @param {Number} value - width value.
+   */
+  get width() {
+    return this.#width
   }
 
   /**
-   * Sets sprite velocty.
+   * Sets sprite width.
    *
-   * @param {Number} velocityX - Horizontal velocity.
+   * @param {Number} value - width value.
+   */
+  set width(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': width can only be a number.`)
+    }
+    this.#width = value
+  }
+
+  /**
+   * Gets sprite height.
+   *
+   * @param {Number} value - height value.
+   */
+  get height() {
+    return this.#height
+  }
+
+  /**
+   * Sets sprite height.
+   *
+   * @param {Number} value - height value.
+   */
+  set height(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': height can only be a number.`)
+    }
+    this.#height = value
+  }
+
+  /**
+   * Gets sprite width.
+   *
+   * @param {Number} value - height value.
+   */
+  get width() {
+    return this.#height
+  }
+
+  /**
+   * Sets sprite height.
+   *
+   * @param {Number} value - height value.
+   */
+  set width(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': height can only be a number.`)
+    }
+    this.#height = value
+  }
+
+  /**
+   * Gets sprite velocty.
+   *
+   * @returns {Number} velocityX - Horizontal velocity.
    */
   get velocityX() {
     return this.#velocityX
@@ -83,13 +143,13 @@ export class Sprite {
   /**
    * Sets sprite velocty.
    *
-   * @param {Number} velocityX - Horizontal velocity.
+   * @param {Number} value - Horizontal velocity.
    */
-  set velocityX(velocityX) {
-    if (typeof velocityX !== 'number') {
+  set velocityX(value) {
+    if (typeof value !== 'number') {
       throw new Error(`Sprite '${this.name}': velocity can only be a number.`)
     }
-    this.#velocityX = velocityX
+    this.#velocityX = value
   }
 
   /**
@@ -98,7 +158,7 @@ export class Sprite {
    * @param {Number} velocityY - Vertical velocity.
    */
   get velocityY() {
-    return this.#velocityX
+    return this.#velocityY
   }
 
   /**
@@ -107,7 +167,7 @@ export class Sprite {
    * @param {Number} velocityY - Vertical velocity.
    */
   set velocityY(velocityY) {
-    if (typeof velocityX !== 'number') {
+    if (typeof velocityY !== 'number') {
       throw new Error(`Sprite '${this.name}': velocity can only be a number.`)
     }
     this.#velocityY = velocityY
@@ -130,102 +190,117 @@ export class Sprite {
       throw new Error(`Sprite '${this.name}': acceleration can only be a number.`)
     }
 
-    /*this.#accelerationX = accelerationX * Math.cos((this.#angle * Math.PI) / 180)
-    this.#accelerationY = accelerationY * Math.sin((this.#angle * Math.PI) / 180) */
+    /*this.accelerationX = accelerationX * Math.cos((this.angle * Math.PI) / 180)
+    this.accelerationY = accelerationY * Math.sin((this.angle * Math.PI) / 180) */
     this.#accelerationX = accelerationX
   }
+
+  /**
+   * Gets sprite acceleration.
+   */
+  get accelerationY() {
+    return this.#accelerationY
+  }
+
   /**
    * Sets sprite acceleration.
    *
    * @param {Number} accelerationY - Vertical acceleration.
    */
   set accelerationY(accelerationY) {
-    if (typeof accelerationX !== 'number') {
+    if (typeof accelerationY !== 'number') {
       throw new Error(`Sprite '${this.name}': acceleration can only be a number.`)
     }
-    /* this.#accelerationX = accelerationX * Math.cos((this.#angle * Math.PI) / 180)
-    this.#accelerationY = accelerationY * Math.sin((this.#angle * Math.PI) / 180) */
+    /* this.accelerationX = accelerationX * Math.cos((this.angle * Math.PI) / 180)
+    this.accelerationY = accelerationY * Math.sin((this.angle * Math.PI) / 180) */
     this.#accelerationY = accelerationY
   }
 
-  /**
-   * Updates sprite properties before drawing to canvas.
+  /*
+   * Gets x position.
    */
-  update() {
-    this.vertices = {
-      v1: this.#getVertex(this.#positionX + this.#width, this.#positionY),
-      v2: this.#getVertex(this.#positionX + this.#width, this.#positionY + this.#height),
-      v3: this.#getVertex(this.#positionX, this.#positionY + this.#height),
-      v4: this.#getVertex(this.#positionX, this.#positionY)
-    }
-
-    this.edges = this.#getEdges()
-
-    this.#updateVelocity()
-    this.#applyFriction()
-    this.#updateRotation()
-    this.#updatePosition()
-    this.#updateFrame()
-
-    // Draw frame
-    this.renderer.flip(this.#flipX, this.#flipY)
-    this.renderer.rotate(this.#angle)
-    this.renderer.draw(this.currentFrame)
+  get positionX() {
+    return this.#positionX
   }
 
   /**
-   * Adds animation loop to sprite instance.
+   * Sets sprite position.
    *
-   * @param {Object} options - { name: String, image: { type: 'array', src: [String] } }.
+   * @param {Number} positionX - Horizontal coordinate.
    */
-  addAnimation(options) {
-    const { name, frameWidth, frameHeight, frameCount, rowIndex } = options
-
-    if (this.animations[name]) {
-      throw new Error(`Sprite '${this.name}': animation '${name}' already exists.`)
+  set positionX(positionX) {
+    if (typeof positionX !== 'number') {
+      throw new Error(`Sprite '${this.name}': position can only be a number.`)
     }
+    this.#positionX = positionX
+  }
 
-    this.animations[name] = new Animation(
-      this.#image,
-      frameWidth,
-      frameHeight,
-      frameCount,
-      rowIndex
-    )
-    this.animations[name].generateFrames()
+  /*
+   * Gets y position.
+   */
+  get positionY() {
+    return this.#positionY
+  }
+
+  /**
+   * Sets sprite position.
+   *
+   * @param {Number} positionY - Horizontal coordinate.
+   */
+  set positionY(positionY) {
+    if (typeof positionY !== 'number') {
+      throw new Error(`Sprite '${this.name}': position can only be a number.`)
+    }
+    this.#positionY = positionY
+  }
+
+  /*
+   * Gets sprite image.
+   */
+  get image() {
+    return this.#image
+  }
+
+  /**
+   * Sets sprite image.
+   *
+   * @param {String} image - image src.
+   */
+  set image(src) {
+    if (typeof src !== 'string') {
+      throw new Error(`Sprite '${this.name}': image can only be a string.`)
+    }
+    let img = new Image()
+    img.src = src
+    this.#image = img
   }
 
   /**
    * Sets current animation loop.
    *
-   * @param {String} name - Name property of animation object.
+   * @param {String} name - Name key of animation object.
    */
   setCurrentAnimation(name) {
-    if (this.animations[name]) {
-      this.currentAnimation = this.animations[name]
+    if (this.#animations[name]) {
+      this.#currentAnimation = this.#animations[name]
     } else {
       throw new Error(`Sprite '${this.name}': animation '${name}' is not defined.`)
     }
   }
 
-  /**
-   * Sets rotationspeed.
-   *
-   * @param {Number} value - Rotation speed value. Positive -> clockwise rotation.
+  /*
+   * Gets friction multiplier.
    */
-  setRotationSpeed(value) {
-    if (typeof value !== 'number') {
-      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
-    }
-    this.#rotationSpeed = value
+  get friction() {
+    return this.#friction
   }
 
   /**
    * Sets friction.
    *
-   * @param {Number} value - Friction value which velocity decreases with.
+   * @param {Number} value - Friction multiplier which velocity decreases with.
    */
-  setFriction(value) {
+  set friction(value) {
     if (typeof value !== 'number') {
       throw new Error(`Sprite '${this.name}': friction can only be number.`)
     }
@@ -237,17 +312,8 @@ export class Sprite {
    *
    * @returns {Boolean} - True if sprite is flipped on its horizontal axis.
    */
-  getFlipX() {
+  get flipX() {
     return this.#flipX === true
-  }
-
-  /**
-   * Gets flipY property.
-   *
-   * @returns {Boolean} - True if sprite is flipped on its vertical axis.
-   */
-  getFlipY() {
-    return this.#flipY === true
   }
 
   /**
@@ -255,11 +321,20 @@ export class Sprite {
    *
    * @param {Boolean} value - Flip value.
    */
-  setFlipX(value) {
+  set flipX(value) {
     if (typeof value !== 'boolean') {
       throw new Error(`Sprite '${this.name}': flip can only be boolean.`)
     }
     this.#flipX = value
+  }
+
+  /**
+   * Gets flipY property.
+   *
+   * @returns {Boolean} - True if sprite is flipped on its vertical axis.
+   */
+  get flipY() {
+    return this.#flipY === true
   }
 
   /**
@@ -267,22 +342,126 @@ export class Sprite {
    *
    * @param {Boolean} value - Flip value.
    */
-  setFlipY(value) {
+  set flipY(value) {
     if (typeof value !== 'boolean') {
       throw new Error(`Sprite '${this.name}': flip can only be boolean.`)
     }
-    this.#flipX = value
+    this.#flipY = value
   }
 
   /**
-   * Sets property to flip sprite.
-   *
-   * @param {Boolean} flipX - Horizontal flip.
-   * @param {Boolean} flipY - Vertical flip.
+   * Gets current angle in degrees.
    */
-  setFlip(flipX, flipY) {
-    this.flip.x = flipX
-    this.flip.y = flipY
+  get angle() {
+    return this.#angle
+  }
+
+  /**
+   * Updates sprite properties before drawing to canvas.
+   */
+  update() {
+    this.vertices = {
+      v1: this.#getVertex(this.positionX + this.width, this.positionY),
+      v2: this.#getVertex(this.positionX + this.width, this.positionY + this.height),
+      v3: this.#getVertex(this.positionX, this.positionY + this.height),
+      v4: this.#getVertex(this.positionX, this.positionY)
+    }
+
+    this.edges = this.#getEdges()
+
+    this.#updateVelocity()
+    this.#applyFriction()
+    this.#updateRotation()
+    this.#updatePosition()
+    this.#updateFrame()
+
+    // Draw frame
+    this.#updateContext()
+  }
+
+  #updateContext() {
+    this.context.save()
+    this.#flipContext()
+    this.#rotateContext()
+    this.#drawContext()
+
+    this.context.restore()
+  }
+  #drawContext() {
+    if (this.#currentFrame !== null) {
+      this.context.drawImage(
+        this.#currentFrame.image,
+        this.#currentFrame.offsetX,
+        this.#currentFrame.offsetY,
+        this.#currentFrame.width,
+        this.#currentFrame.height,
+        this.positionX,
+        this.positionY,
+        this.width,
+        this.height
+      )
+    } else {
+      this.context.fillRect(this.positionX, this.positionY, this.width, this.height)
+    }
+  }
+
+  /**
+   * Flips context if toggled.
+   */
+  #flipContext() {
+    if (this.flipX || this.flipY) {
+      this.context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
+      this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
+      this.context.translate(
+        -(this.positionX + this.width / 2),
+        -(this.positionY + this.height / 2)
+      )
+    }
+  }
+
+  /**
+   * Rotates con
+   */
+  #rotateContext() {
+    this.context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
+    this.context.rotate((this.angle * Math.PI) / 180)
+    this.context.translate(-(this.positionX + this.width / 2), -(this.positionY + this.height / 2))
+  }
+
+  /**
+   * Adds animation loop to sprite instance.
+   *
+   * @param {Object} options - { name: String, frameWidth: Number, frameHeight: Number, frameCount: Number, rowIndex: Number } }.
+   */
+  addAnimation(options) {
+    const { name, frameWidth, frameHeight, frameCount, rowIndex, delayPerFrame } = options
+    this.delayPerFrame = delayPerFrame
+
+    if (this.#animations[name]) {
+      throw new Error(`Sprite '${this.name}': animation '${name}' already exists.`)
+    }
+
+    this.#animations[name] = new Animation(
+      this.image,
+      frameWidth,
+      frameHeight,
+      frameCount,
+      rowIndex
+    )
+    this.#animations[name].generateFrames()
+  }
+
+  /**
+   * Sets rotationspeed.
+   *
+   * @param {Number} value - Rotation speed value. Positive -> clockwise rotation.
+   */
+  set rotationSpeed(value) {
+    if (typeof value !== 'number') {
+      throw new Error(`Sprite '${this.name}': acceleration can only be number.`)
+    }
+    this.#canRotate = true
+    this.#rotationSpeed = value
   }
 
   /**
@@ -293,10 +472,10 @@ export class Sprite {
    * @returns {Number} Distance in points.
    */
   distanceTo(target) {
-    const centerX = this.#positionX + this.#width / 2
-    const centerY = this.#positionY + this.#height / 2
-    const targetCenterX = target.x + (target.width / 2 || 0)
-    const targetCenterY = target.y + (target.height / 2 || 0)
+    const centerX = this.positionX + this.width / 2
+    const centerY = this.positionY + this.height / 2
+    const targetCenterX = target.positionX + (target.width / 2 || 0)
+    const targetCenterY = target.positionY + (target.height / 2 || 0)
 
     return Math.sqrt(Math.pow(centerX - targetCenterX, 2) + Math.pow(centerY - targetCenterY, 2))
   }
@@ -309,10 +488,10 @@ export class Sprite {
    * @returns {Number} - Angle in degrees.
    */
   angleTo(target) {
-    const centerX = this.#positionX + this.#width / 2
-    const centerY = this.#positionY + this.#height / 2
-    const targetCenterX = target.x + (target.width / 2 || 0)
-    const targetCenterY = target.y + (target.height / 2 || 0)
+    const centerX = this.positionX + this.width / 2
+    const centerY = this.positionY + this.height / 2
+    const targetCenterX = target.positionX + (target.width / 2 || 0)
+    const targetCenterY = target.positionY + (target.height / 2 || 0)
 
     return (Math.atan2(targetCenterY - centerY, targetCenterX - centerX) * 180) / Math.PI
   }
@@ -325,10 +504,10 @@ export class Sprite {
   detectCollision(target) {
     // Check unrotated collision.
     if (
-      this.#positionX + this.#width >= target.#positionX &&
-      this.#positionX <= target.#positionX + target.width &&
-      this.#positionY + this.#height >= target.#positionY &&
-      this.#positionY <= target.#positionY + target.height
+      this.positionX + this.width >= target.positionX &&
+      this.positionX <= target.positionX + target.width &&
+      this.positionY + this.height >= target.positionY &&
+      this.positionY <= target.positionY + target.height
     ) {
       return true
     }
@@ -388,13 +567,15 @@ export class Sprite {
     return true
   }
 
+
+
   /**
    * Sets movement boundaries.
    *
    * @param {Object} bounds - Object of bounding values. { minimumX: Number, maximumX: Number, minimumY: Number, maximumY: Number }
    */
-  setBoundingBox(bounds) {
-    this.bounds = bounds
+  set bounds(bounds) {
+    this.#bounds = bounds
   }
 
   /**
@@ -405,19 +586,19 @@ export class Sprite {
    * @returns {Object} - x and y coordinates of vertex.
    */
   #getVertex(unrotatedX, unrotatedY) {
-    const currentAngleInRadians = (this.#angle * Math.PI) / 180
-
-    const distanceToVertex = this.distanceTo({ x: unrotatedX, y: unrotatedY })
-    const angleToVertex = (this.angleTo({ x: unrotatedX, y: unrotatedY }) * Math.PI) / 180
+    
+    const currentAngleInRadians = (this.angle * Math.PI) / 180
+    const distanceToVertex = this.distanceTo({ positionX: unrotatedX, positionY: unrotatedY })
+    const angleToVertex = (this.angleTo({ positionX: unrotatedX, positionY: unrotatedY }) * Math.PI) / 180
 
     return {
       x:
-        this.#positionX +
-        this.#width / 2 +
+        this.positionX +
+        this.width / 2 +
         distanceToVertex * Math.cos(currentAngleInRadians + angleToVertex),
       y:
-        this.#positionY +
-        this.#height / 2 +
+        this.positionY +
+        this.height / 2 +
         distanceToVertex * Math.sin(currentAngleInRadians + angleToVertex)
     }
   }
@@ -449,25 +630,25 @@ export class Sprite {
    * Updates sprite velocity.
    */
   #updateVelocity() {
-    this.#velocityX += this.#accelerationX
-    this.#velocityY += this.#accelerationY
+    this.velocityX += this.accelerationX
+    this.velocityY += this.accelerationY
   }
 
   /**
    * Decreases sprite velocity over time.
    */
   #applyFriction() {
-    this.#velocityX *= this.#friction
-    this.#velocityY *= this.#friction
+    this.velocityX *= this.friction
+    this.velocityY *= this.friction
   }
 
   /**
    * Updates rotation angle with given speed.
    */
   #updateRotation() {
-    if (this.rotation) {
-      this.#angle += this.#rotationSpeed
-      if ((this.#angle && this.#angle >= 360) || this.#angle <= -360) this.#angle = 0
+    if (this.#canRotate) {
+      this.angle += this.#rotationSpeed
+      if ((this.angle && this.angle >= 360) || this.angle <= -360) this.angle = 0
     }
   }
 
@@ -497,25 +678,25 @@ export class Sprite {
     }
 
     // Compare to bounding box
-    if (minimumSpriteX < this.bounds.x.min) {
-      this.#positionX += 1
-      this.#velocityX = 0
-    } else if (maximumSpriteX > this.bounds.x.max) {
-      this.#positionX -= 1
-      this.#velocityX = 0
-    } else if (minimumSpriteY < this.bounds.y.min) {
-      this.#positionY += 1
-      this.#velocityY = 0
-    } else if (maximumSpriteY > this.bounds.y.max) {
-      this.#positionY -= 1
-      this.#velocityY = 0
+    if (minimumSpriteX < this.#bounds.x.min) {
+      this.positionX += 1
+      this.velocityX = 0
+    } else if (maximumSpriteX > this.#bounds.x.max) {
+      this.positionX -= 1
+      this.velocityX = 0
+    } else if (minimumSpriteY < this.#bounds.y.min) {
+      this.positionY += 1
+      this.velocityY = 0
+    } else if (maximumSpriteY > this.#bounds.y.max) {
+      this.positionY -= 1
+      this.velocityY = 0
     } else {
-      if (this.#angle === null) {
-        this.#positionX += this.#velocityX
-        this.#positionY += this.#velocityY
+      if (!this.#canRotate) {
+        this.positionX += this.velocityX
+        this.positionY += this.velocityY
       } else {
-        this.#positionX += this.#velocityX * Math.cos((this.#angle * Math.PI) / 180)
-        this.#positionY += this.#velocityY * Math.sin((this.#angle * Math.PI) / 180)
+        this.positionX += this.velocityX * Math.cos((this.angle * Math.PI) / 180)
+        this.positionY += this.velocityY * Math.sin((this.angle * Math.PI) / 180)
       }
     }
   }
@@ -524,13 +705,13 @@ export class Sprite {
    * Sets new frame index from current animation loop.
    */
   #updateFrame() {
-    if (this.currentAnimation) {
-      this.currentFrame = this.currentAnimation.frames[this.currentFrameIndex]
+    if (this.#currentAnimation) {
+      this.#currentFrame = this.#currentAnimation.frames[this.#currentFrameIndex]
       if (this.#hasReachedDelay()) {
-        if (this.currentFrameIndex >= this.currentAnimation.frames.length - 1) {
-          this.currentFrameIndex = 0
+        if (this.#currentFrameIndex >= this.#currentAnimation.frames.length - 1) {
+          this.#currentFrameIndex = 0
         } else {
-          this.currentFrameIndex++
+          this.#currentFrameIndex++
         }
       }
     }

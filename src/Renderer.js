@@ -30,9 +30,10 @@ export class Renderer {
     }
   }
 
-  draw(frame) {
+  draw(frame, angle, flipX, flipY) {
     this.context.save()
-    if (frame.image) {
+    this.rotate(angle)
+    this.flip(flipX, flipY)
       this.context.drawImage(
         frame.image,
         frame.offsetX,
@@ -44,9 +45,7 @@ export class Renderer {
         this.width,
         this.height
       )
-    } else {
-      this.context.fillRect(this.positionX, this.positionY, this.width, this.height)
-    }
+    
     this.context.restore()
   }
 }
