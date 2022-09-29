@@ -500,7 +500,7 @@ export class Sprite {
     }
 
     for (let i = 0; i < normalVectors.length; i++) {
-      // Dot product for all vertices against every normal vector.
+      // Dot product projection for all vertices against every normal vector.
       let dotProductMax = null
       let dotProductMin = null
       let targetDotProductMax = null
