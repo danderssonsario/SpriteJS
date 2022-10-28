@@ -1,6 +1,13 @@
+/**
+ * Encapsulates a single animation frame.
+ */
 export class Frame {
-  constructor(frameWidth, frameHeight) {
-    this.frameWidth = frameWidth
-    this.frameHeight = frameHeight
+  /**
+   * @param {number} width - Width of frame.
+   * @param {number} height - Height of frame.
+   */
+  constructor (width, height) {
+    this.width = width
+    this.height = height
   }
 }

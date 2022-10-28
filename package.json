@@ -2,8 +2,7 @@
   "name": "spritejs",
   "version": "1.0.0",
   "type": "module",
-  
-   "repository": {
+  "repository": {
     "type": "git",
     "url": "git+https://github.com/danderssonsario/SpriteJS.git"
   },
@@ -13,13 +12,23 @@
   "bugs": {
     "url": "https://github.com/danderssonsario/SpriteJS/issues"
   },
-   "homepage": "https://github.com/danderssonsario/SpriteJS#readme",
+  "homepage": "https://github.com/danderssonsario/SpriteJS#readme",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@lnu/eslint-config": "^1.1.7",
+    "eslint": "^8.25.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsdoc": "^39.3.14",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
     "vite": "^3.1.0"
+  },
+  "eslintConfig": {
+    "extends": "@lnu"
   }
 }

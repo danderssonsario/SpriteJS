@@ -2,7 +2,7 @@
 Javascript library for creating game objects.
 
 ## Getting started
-Import module to your project or run it in the test app.
+Clone this module and use it for your project!
 ### Test module
 ````javascript
 npm run dev
@@ -26,6 +26,7 @@ const options = {
   width: 100,
   height: 100,
   image: '../player.png',
+  perspective: 'side-on'
 }
 const player = new Sprite('name', context, options)
 ````
@@ -56,7 +57,7 @@ function animate() {
 animate()
 ````
 
-### Example: Steering plane-like object with arrowkeys.
+### Example: Steering object with arrowkeys in top-down perpective.
 ````javascript
 import { Sprite } from './src/Sprite.js'
 
@@ -131,26 +132,26 @@ function animate() {
   requestAnimationFrame(animate)
   context.clearRect(0, 0, canvas.width, canvas.height)
   player.update()
-  player.accelerationY = 0
-  player.accelerationX = 0
-  player.rotationSpeed = 0 
+  player.body.accelerationY = 0
+  player.body.accelerationX = 0
+  player.body.rotationSpeed = 0 
 
   if (keys.up.pressed) {
-    player.accelerationY = 0.05
-    player.accelerationX = 0.05
+    player.body.accelerationY = 0.05
+    player.body.accelerationX = 0.05
   } 
 
   if (keys.left.pressed) {
-    player.rotationSpeed = -5
+    player.body.rotationSpeed = -5
   }
 
   if (keys.right.pressed) {
-    player.rotationSpeed = 5
+    player.body.rotationSpeed = 5
   }
 
   if (keys.down.pressed) {
-    player.accelerationX = -0.05
-    player.accelerationY = -0.05
+    player.body.accelerationX = -0.05
+    player.body.accelerationY = -0.05
   }
 }
 
@@ -158,7 +159,7 @@ animate()
 
 ````
 
-### Example: Pacman-like controllers.
+### Example: Steering object with arrowkeys in side-on perpective.
 ````javascript
 import { Sprite } from './src/Sprite.js'
 
@@ -238,23 +239,23 @@ function animate() {
   player.update()
 
    if (keys.up.pressed) {
-    player.velocityX = 0
-    player.velocityY = -5
+    player.body.velocityX = 0
+    player.body.velocityY = -5
   }
 
   if (keys.left.pressed) {
-    player.velocityX = -5
-    player.velocityY = 0
+    player.body.velocityX = -5
+    player.body.velocityY = 0
   }
 
   if (keys.right.pressed) {
-    player.velocityX = 5
-    player.velocityY = 0
+    player.body.velocityX = 5
+    player.body.velocityY = 0
   }
 
   if (keys.down.pressed) {
-    player.velocityX = 0
-    player.velocityY = 5
+    player.body.velocityX = 0
+    player.body.velocityY = 5
   }
 }
 

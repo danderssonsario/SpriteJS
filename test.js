@@ -14,7 +14,8 @@ const options = {
   positionY: innerHeight / 2,
   width: 100,
   height: 100,
-  image: '../player.png'
+  image: '../player.png',
+  perspective: 'side-on'
 }
 
 const player = new Sprite('player', context, options)
@@ -30,7 +31,7 @@ player.addAnimation({
 
 player.setCurrentAnimation('Walk')
 
-let keys = {
+const keys = {
   left: {
     pressed: false
   },
@@ -82,36 +83,36 @@ addEventListener('keyup', ({ key }) => {
   }
 })
 
-
-/*
+/**
  * Sprite loop.
  */
-function animate() {
-  requestAnimationFrame(animate)
+function animate () {
   context.clearRect(0, 0, canvas.width, canvas.height)
   player.update()
 
   if (keys.up.pressed) {
-    player.velocityX = 0
-    player.velocityY = -5
+    player.body.velocityX = 0
+    player.body.velocityY = -5
   }
 
   if (keys.left.pressed) {
-    player.velocityX = -5
-    player.velocityY = 0
+    player.body.velocityX = -5
+    player.body.velocityY = 0
   }
 
   if (keys.right.pressed) {
-    player.velocityX = 5
-    player.velocityY = 0
+    player.body.velocityX = 5
+    player.body.velocityY = 0
   }
 
   if (keys.down.pressed) {
-    player.velocityX = 0
-    player.velocityY = 5
+    player.body.velocityX = 0
+    player.body.velocityY = 5
   }
 }
-animate()
+
+setInterval(() => {
+  requestAnimationFrame(animate)
+}, 50)
 
 player.bounds = { x: { min: 0, max: innerWidth }, y: { min: 0, max: innerHeight } }
-
