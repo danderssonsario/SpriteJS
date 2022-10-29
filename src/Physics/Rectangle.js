@@ -5,8 +5,6 @@ import { Body } from './Body.js'
  * Class for rectangular bodies.
  */
 export class Rectangle extends Body {
-  #vertices
-  #edges
   #bounds
   /**
    *
@@ -20,8 +18,8 @@ export class Rectangle extends Body {
     super(positionX, positionY, perspective)
     this.width = width
     this.height = height
-    this.#vertices = {}
-    this.#edges = {}
+    this.vertices = {}
+    this.edges = {}
     this.#bounds = {
       x: { min: 0, max: innerWidth },
       y: { min: 0, max: innerHeight }
@@ -35,21 +33,6 @@ export class Rectangle extends Body {
    */
   set bounds (bounds) {
     this.#bounds = bounds
-  }
-
-  /**
-   *
-   */
-  update () {
-    super.update()
-    this.vertices = {
-      v1: this.#getVertex(this.positionX + this.width, this.positionY),
-      v2: this.#getVertex(this.positionX + this.width, this.positionY + this.height),
-      v3: this.#getVertex(this.positionX, this.positionY + this.height),
-      v4: this.#getVertex(this.positionX, this.positionY)
-    }
-
-    this.edges = this.#getEdges()
   }
 
   /**
@@ -85,75 +68,25 @@ export class Rectangle extends Body {
   }
 
   /**
-   * Detects collision.
-   *
-   * @param {object} target - { x: Number, y: Number, vertices: [Object], edges: [Object] }
-   * @returns {boolean} - True if objects overlap, false if not.
+   * Updates Rectangle body.
    */
-  detectCollision (target) {
-    // Check unrotated collision.
-    if (
-      this.positionX + this.width >= target.positionX &&
-      this.positionX <= target.positionX + target.width &&
-      this.positionY + this.height >= target.positionY &&
-      this.positionY <= target.positionY + target.height
-    ) {
-      return true
+  update () {
+    super.update()
+    this.#updateVertices()
+    this.#updateEdges()
+    this.#checkBounds()
+  }
+
+  /**
+   * Updates current edges of rectangle.
+   */
+  #updateVertices () {
+    this.vertices = {
+      v1: this.#getVertex(this.positionX + this.width, this.positionY),
+      v2: this.#getVertex(this.positionX + this.width, this.positionY + this.height),
+      v3: this.#getVertex(this.positionX, this.positionY + this.height),
+      v4: this.#getVertex(this.positionX, this.positionY)
     }
-
-    const normalVectors = []
-    // get normal of each edge
-    for (const edge in this.edges) {
-      const normal = { x: -1 * this.edges[edge].y, y: this.edges[edge].x }
-      normalVectors.push(normal)
-    }
-
-    for (let i = 0; i < normalVectors.length; i++) {
-      // Dot product for all vertices against every normal vector.
-      let dotProductMax = null
-      let dotProductMin = null
-      let targetDotProductMax = null
-      let targetDotProductMin = null
-
-      for (const vertex in this.vertices) {
-        const dotProduct =
-          this.vertices[vertex].x * normalVectors[i].x +
-          this.vertices[vertex].y * normalVectors[i].y
-        if (dotProductMax === null || dotProduct > dotProductMax) {
-          dotProductMax = dotProduct
-        }
-
-        if (dotProductMin === null || dotProduct < dotProductMin) {
-          dotProductMin = dotProduct
-        }
-      }
-
-      for (const vertex in target.vertices) {
-        const dotProduct =
-          target.vertices[vertex].x * normalVectors[i].x +
-          target.vertices[vertex].y * normalVectors[i].y
-        if (targetDotProductMax === null || dotProduct > targetDotProductMax) {
-          targetDotProductMax = dotProduct
-        }
-
-        if (targetDotProductMin === null || dotProduct < targetDotProductMin) {
-          targetDotProductMin = dotProduct
-        }
-      }
-
-      // Check if dot product projection overlaps. Check next if true.
-      if (
-        (dotProductMin > targetDotProductMin && dotProductMin < targetDotProductMax) ||
-        (dotProductMax > targetDotProductMin && dotProductMax < targetDotProductMax)
-      ) {
-        continue
-      } else {
-        // Return false if gap occurs.
-        return false
-      }
-    }
-
-    return true
   }
 
   /**
@@ -182,12 +115,10 @@ export class Rectangle extends Body {
   }
 
   /**
-   * Gets current edges of rectangle.
-   *
-   * @returns {object} - Containing vectors "drawn" between each vertex.
+   * Updates current edges of rectangle.
    */
-  #getEdges () {
-    return {
+  #updateEdges () {
+    this.edges = {
       e1: {
         x: this.vertices.v2.x - this.vertices.v1.x,
         y: this.vertices.v2.y - this.vertices.v1.y
@@ -243,5 +174,86 @@ export class Rectangle extends Body {
       this.positionY -= 1
       this.velocityY = 0
     }
+  }
+
+  /**
+   * Detects collision.
+   *
+   * @param {object} target - { x: Number, y: Number, vertices: [Object], edges: [Object] }
+   * @returns {boolean} - True if collision is detected, false if not.
+   */
+  detectCollision (target) {
+    if (this.#objectsOverlap(target) || this.#allProjectionsOverlap(target)) {
+      return true
+    } else {
+      return false
+    }
+  }
+
+  // eslint-disable-next-line jsdoc/require-jsdoc
+  #objectsOverlap (target) {
+    if (
+      this.positionX + this.width >= target.positionX &&
+      this.positionX <= target.positionX + target.width &&
+      this.positionY + this.height >= target.positionY &&
+      this.positionY <= target.positionY + target.height
+    ) {
+      return true
+    }
+  }
+
+  // eslint-disable-next-line jsdoc/require-jsdoc
+  #allProjectionsOverlap (target) {
+    const normalVectors = []
+
+    for (const edge in this.edges) {
+      const normal = { x: -1 * this.edges[edge].y, y: this.edges[edge].x }
+      normalVectors.push(normal)
+    }
+    for (let i = 0; i < normalVectors.length; i++) {
+      // Dot product for all vertices against every normal vector.
+      let dotProductMax = null
+      let dotProductMin = null
+      let targetDotProductMax = null
+      let targetDotProductMin = null
+
+      for (const vertex in this.vertices) {
+        const dotProduct =
+          this.vertices[vertex].x * normalVectors[i].x +
+          this.vertices[vertex].y * normalVectors[i].y
+        if (dotProductMax === null || dotProduct > dotProductMax) {
+          dotProductMax = dotProduct
+        }
+
+        if (dotProductMin === null || dotProduct < dotProductMin) {
+          dotProductMin = dotProduct
+        }
+      }
+
+      for (const vertex in target.vertices) {
+        const dotProduct =
+          target.vertices[vertex].x * normalVectors[i].x +
+          target.vertices[vertex].y * normalVectors[i].y
+        if (targetDotProductMax === null || dotProduct > targetDotProductMax) {
+          targetDotProductMax = dotProduct
+        }
+
+        if (targetDotProductMin === null || dotProduct < targetDotProductMin) {
+          targetDotProductMin = dotProduct
+        }
+      }
+
+      // Check if dot product projection overlaps. Check next if true.
+      if (
+        (dotProductMin > targetDotProductMin && dotProductMin < targetDotProductMax) ||
+        (dotProductMax > targetDotProductMin && dotProductMax < targetDotProductMax)
+      ) {
+        continue
+      } else {
+        // Return false if gap occurs.
+        return false
+      }
+    }
+    return true
   }
 }

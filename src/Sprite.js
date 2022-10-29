@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/require-jsdoc */
 /* eslint-disable accessor-pairs */
 /* eslint-disable jsdoc/check-param-names */
 import { Animation } from './Animations/Animation.js'
@@ -130,21 +131,17 @@ export class Sprite {
    * Draws context.
    */
   #drawContext () {
-    if (this.#currentFrame) {
-      this.context.drawImage(
-        this.#currentFrame.image,
-        this.#currentFrame.offsetX,
-        this.#currentFrame.offsetY,
-        this.#currentFrame.frame.width,
-        this.#currentFrame.frame.height,
-        this.body.positionX,
-        this.body.positionY,
-        this.body.width,
-        this.body.height
-      )
-    } else {
-      throw new Error()
-    }
+    this.context.drawImage(
+      this.#currentFrame.image,
+      this.#currentFrame.offsetX,
+      this.#currentFrame.offsetY,
+      this.#currentFrame.frame.width,
+      this.#currentFrame.frame.height,
+      this.body.positionX,
+      this.body.positionY,
+      this.body.width,
+      this.body.height
+    )
   }
 
   /**
@@ -197,23 +194,16 @@ export class Sprite {
    * Sets new frame index from current animation loop.
    */
   #updateFrame () {
-    if (this.#currentAnimation) {
-      this.#currentFrame = this.#currentAnimation.frames[this.#currentFrameIndex]
-      if (this.#hasReachedDelay()) {
-        if (this.#currentFrameIndex >= this.#currentAnimation.frames.length - 1) {
-          this.#currentFrameIndex = 0
-        } else {
-          this.#currentFrameIndex++
-        }
+    this.#currentFrame = this.#currentAnimation.frames[this.#currentFrameIndex]
+    if (this.#hasReachedDelay()) {
+      if (this.#currentFrameIndex >= this.#currentAnimation.frames.length - 1) {
+        this.#currentFrameIndex = 0
+      } else {
+        this.#currentFrameIndex++
       }
     }
   }
 
-  /**
-   * Checks if render delay is reached.
-   *
-   * @returns {boolean} - True if delay is reached.
-   */
   #hasReachedDelay () {
     const currentTime = Date.now()
     const elapsedTime = currentTime - this.#startTime
