@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/require-jsdoc */
 /**
  * Test Module.
  */
@@ -15,7 +16,7 @@ const options = {
   width: 100,
   height: 100,
   image: '../player.png',
-  perspective: 'side-on'
+  perspective: 'top-down'
 }
 
 const player = new Sprite('player', context, options)
@@ -83,36 +84,34 @@ addEventListener('keyup', ({ key }) => {
   }
 })
 
-/**
- * Sprite loop.
- */
 function animate () {
   context.clearRect(0, 0, canvas.width, canvas.height)
   player.update()
-
+  player.body.accelerationY = 0
+  player.body.accelerationX = 0
+  player.body.rotationSpeed = 0
+  player.body.friction = 0.05
   if (keys.up.pressed) {
-    player.body.velocityX = 0
-    player.body.velocityY = -5
+    player.body.accelerationY = 0.05
+    player.body.accelerationX = 0.05
   }
 
   if (keys.left.pressed) {
-    player.body.velocityX = -5
-    player.body.velocityY = 0
+    player.body.rotationSpeed = -5
   }
 
   if (keys.right.pressed) {
-    player.body.velocityX = 5
-    player.body.velocityY = 0
+    player.body.rotationSpeed = 5
   }
 
   if (keys.down.pressed) {
-    player.body.velocityX = 0
-    player.body.velocityY = 5
+    player.body.accelerationX = -0.05
+    player.body.accelerationY = -0.05
   }
 }
 
 setInterval(() => {
   requestAnimationFrame(animate)
-}, 50)
+}, 10)
 
 player.bounds = { x: { min: 0, max: innerWidth }, y: { min: 0, max: innerHeight } }

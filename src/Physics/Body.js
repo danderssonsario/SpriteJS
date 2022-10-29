@@ -10,7 +10,7 @@ export class Body {
   #accelerationY = 0
   #angle = 0
   #rotationSpeed = 0
-  #friction = 1
+  #friction = 0
   #canRotate
 
   /**
@@ -19,8 +19,8 @@ export class Body {
    * @param {string} perspective - Perpective of body. 'top-down' | 'side-on'
    */
   constructor (positionX, positionY, perspective) {
-    this.positionX = positionX
-    this.positionY = positionY
+    this.#positionX = positionX
+    this.#positionY = positionY
 
     // Rotation flag for body type
     if (perspective === 'top-down') {
@@ -182,7 +182,7 @@ export class Body {
    * @returns {number} - degrees/frame.
    */
   get rotationSpeed () {
-    return this.#friction
+    return this.#rotationSpeed
   }
 
   /**
@@ -198,7 +198,7 @@ export class Body {
   }
 
   /**
-   * Gets friction multiplier.
+   * Gets friction subtrahend.
    *
    * @returns {number} - Friction.
    */
@@ -209,7 +209,7 @@ export class Body {
   /**
    * Sets friction.
    *
-   * @param {number} value - Friction multiplier which velocity decreases with.
+   * @param {number} value - Friction number which velocity gets subtracted with.
    */
   set friction (value) {
     if (typeof value !== 'number') {
@@ -231,18 +231,18 @@ export class Body {
    * Updates velocity.
    */
   #updateVelocity () {
-    this.velocityX += this.accelerationX
-    this.velocityY += this.accelerationY
+    this.#velocityX += this.#accelerationX
+    this.#velocityY += this.#accelerationY
 
-    let speed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY)
-    const angle = Math.atan2(this.velocityY, this.velocityX)
-    if (speed > 0.05) {
-      speed -= 0.05
+    let speed = Math.sqrt(this.#velocityX * this.#velocityX + this.#velocityY * this.#velocityY)
+    const angle = Math.atan2(this.#velocityY, this.#velocityX)
+    if (speed > this.#friction) {
+      speed -= this.#friction
     } else {
       speed = 0
     }
-    this.velocityX = Math.cos(angle) * speed
-    this.velocityY = Math.sin(angle) * speed
+    this.#velocityX = Math.cos(angle) * speed
+    this.#velocityY = Math.sin(angle) * speed
   }
 
   /**
@@ -250,8 +250,8 @@ export class Body {
    */
   #updateRotation () {
     if (this.#canRotate) {
-      this.angle += this.#rotationSpeed
-      if ((this.angle && this.angle >= 360) || this.angle <= -360) this.angle = 0
+      this.#angle += this.#rotationSpeed
+      if ((this.#angle && this.#angle >= 360) || this.#angle <= -360) this.#angle = 0
     }
   }
 
@@ -260,11 +260,11 @@ export class Body {
    */
   #updatePosition () {
     if (!this.#canRotate) {
-      this.positionX += this.velocityX
-      this.positionY += this.velocityY
+      this.#positionX += this.#velocityX
+      this.#positionY += this.#velocityY
     } else {
-      this.positionX += this.velocityX * Math.cos((this.angle * Math.PI) / 180)
-      this.positionY += this.velocityY * Math.sin((this.angle * Math.PI) / 180)
+      this.#positionX += this.#velocityX * Math.cos((this.#angle * Math.PI) / 180)
+      this.#positionY += this.#velocityY * Math.sin((this.#angle * Math.PI) / 180)
     }
   }
 }

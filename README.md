@@ -72,6 +72,7 @@ const options = {
   width: 100,
   height: 100,
   image: '../player.png',
+  perspective: 'top-down'
 }
 
 const plane = new Sprite('plane', context, options)
@@ -134,7 +135,8 @@ function animate() {
   player.update()
   player.body.accelerationY = 0
   player.body.accelerationX = 0
-  player.body.rotationSpeed = 0 
+  player.body.rotationSpeed = 0
+  player.body.friction = 0.05 
 
   if (keys.up.pressed) {
     player.body.accelerationY = 0.05
@@ -169,13 +171,12 @@ canvas.height = innerHeight
 const context = canvas.getContext('2d')
 
 const options = {
-  position: {x: 50, y: 50},
-  velocity: {x: 0, y: 0},
-  acceleration: {x: 0, y: 0},
+  positionX: 50,
+  positionY: innerHeight/2,
   width: 100,
   height: 100,
-  friction: 0,
-  rotation: null,
+  image: '../player.png',
+  perspective: 'top-down'
 }
 
 const player = new Sprite('player', context, options)
