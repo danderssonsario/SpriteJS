@@ -7,19 +7,24 @@ import { Rectangle } from './Physics/Rectangle.js'
 /**
  * @classdesc - Class for animated sprites.
  */
-export class Sprite {
+export class Sprite extends Rectangle {
   // Private fields.
+  #name
+  #context
   #image
 
   #flipX = false
   #flipY = false
   #startTime = Date.now()
 
+  #angle
+
   #currentFrame
   #currentFrameIndex
 
   #animations
   #currentAnimation
+  #delayPerFrame
 
   /**
    *
@@ -31,15 +36,14 @@ export class Sprite {
    * @param {number} width - Width of sprite object (options.width).
    * @param {number} height - Height of sprite object (options.height).
    * @param {number} image - Sprite sheet image path (options.image).
-   * @param {string} perspective - Perpective of sprite. 'top-down' | 'side-on'
    */
   constructor (name, context, options) {
-    const { width, height, positionX, positionY, image, perspective } = options
-    this.name = name
-    this.context = context
-    this.width = width
-    this.height = height
+    const { width, height, positionX, positionY, angle, image } = options
+    super(width, height, positionX, positionY)
+    this.#name = name
+    this.#context = context
     this.#image = image
+    this.#angle = angle
 
     // Animation
     this.#animations = {}
@@ -48,8 +52,6 @@ export class Sprite {
     // Current (Animation = one or more frames)
     this.#currentFrame = null
     this.#currentFrameIndex = 0
-
-    this.body = new Rectangle(width, height, positionX, positionY, perspective)
   }
 
   /**
@@ -111,7 +113,7 @@ export class Sprite {
    * Updates sprite properties before drawing to canvas.
    */
   update () {
-    this.body.update()
+    super.update()
     this.#updateFrame()
     this.#updateContext()
   }
@@ -120,28 +122,28 @@ export class Sprite {
    * Updates context.
    */
   #updateContext () {
-    this.context.save()
+    this.#context.save()
     this.#flipContext()
     this.#rotateContext()
-    this.#drawContext()
-    this.context.restore()
+    this.#context.restore()
   }
 
   /**
-   * Draws context.
+   * Draws sprite.
    */
-  #drawContext () {
-    this.context.drawImage(
+  draw () {
+    this.#context.drawImage(
       this.#currentFrame.image,
       this.#currentFrame.offsetX,
       this.#currentFrame.offsetY,
       this.#currentFrame.frame.width,
       this.#currentFrame.frame.height,
-      this.body.positionX,
-      this.body.positionY,
-      this.body.width,
-      this.body.height
+      this.positionX,
+      this.positionY,
+      this.width,
+      this.height
     )
+    this.#context.restore()
   }
 
   /**
@@ -149,11 +151,11 @@ export class Sprite {
    */
   #flipContext () {
     if (this.flipX || this.flipY) {
-      this.context.translate(this.body.positionX + this.body.width / 2, this.body.positionY + this.body.height / 2)
-      this.context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
-      this.context.translate(
-        -(this.body.positionX + this.body.width / 2),
-        -(this.body.positionY + this.body.height / 2)
+      this.#context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
+      this.#context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
+      this.#context.translate(
+        -(this.positionX + this.width / 2),
+        -(this.positionY + this.height / 2)
       )
     }
   }
@@ -162,9 +164,9 @@ export class Sprite {
    * Rotates context.
    */
   #rotateContext () {
-    this.context.translate(this.body.positionX + this.body.width / 2, this.body.positionY + this.body.height / 2)
-    this.context.rotate((this.body.angle * Math.PI) / 180)
-    this.context.translate(-(this.body.positionX + this.body.width / 2), -(this.body.positionY + this.body.height / 2))
+    this.#context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
+    this.#context.rotate((this.#angle * Math.PI) / 180)
+    this.#context.translate(-(this.positionX + this.width / 2), -(this.positionY + this.height / 2))
   }
 
   /**
@@ -174,7 +176,7 @@ export class Sprite {
    */
   addAnimation (options) {
     const { name, frameWidth, frameHeight, frameCount, rowIndex, delayPerFrame } = options
-    this.delayPerFrame = delayPerFrame
+    this.#delayPerFrame = delayPerFrame
 
     if (this.#animations[name]) {
       throw new Error(`Sprite '${this.name}': animation '${name}' already exists.`)
@@ -207,7 +209,7 @@ export class Sprite {
   #hasReachedDelay () {
     const currentTime = Date.now()
     const elapsedTime = currentTime - this.#startTime
-    if (elapsedTime > this.delayPerFrame) {
+    if (elapsedTime > this.#delayPerFrame) {
       this.#startTime = currentTime
       return true
     }

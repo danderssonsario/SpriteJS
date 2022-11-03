@@ -16,7 +16,7 @@ const options = {
   width: 100,
   height: 100,
   image: '../player.png',
-  perspective: 'top-down'
+  angle: 0
 }
 
 const player = new Sprite('player', context, options)
@@ -31,7 +31,6 @@ player.addAnimation({
 })
 
 player.setCurrentAnimation('Walk')
-
 const keys = {
   left: {
     pressed: false
@@ -46,6 +45,7 @@ const keys = {
     pressed: false
   }
 }
+console.log(Object.values(keys))
 addEventListener('keydown', ({ key }) => {
   switch (key) {
     case 'ArrowLeft':
@@ -86,28 +86,30 @@ addEventListener('keyup', ({ key }) => {
 
 function animate () {
   context.clearRect(0, 0, canvas.width, canvas.height)
+
   player.update()
-  player.body.accelerationY = 0
-  player.body.accelerationX = 0
-  player.body.rotationSpeed = 0
-  player.body.friction = 0.05
-  if (keys.up.pressed) {
-    player.body.accelerationY = 0.05
-    player.body.accelerationX = 0.05
+  player.draw()
+  if (keys.up.pressed && !keys.down.pressed) {
+    player.velocityY = -5
+  } else if (!keys.up.pressed && keys.down.pressed) {
+    player.velocityY = 5
+  } else {
+    player.velocityY = 0
   }
 
-  if (keys.left.pressed) {
-    player.body.rotationSpeed = -5
+  if (keys.left.pressed && !keys.right.pressed) {
+    player.velocityX = -5
+  } else if (!keys.left.pressed && keys.right.pressed) {
+    player.velocityX = 5
+  } else {
+    player.velocityX = 0
   }
 
-  if (keys.right.pressed) {
-    player.body.rotationSpeed = 5
-  }
-
-  if (keys.down.pressed) {
-    player.body.accelerationX = -0.05
-    player.body.accelerationY = -0.05
-  }
+/*   if (keys.down.pressed) {
+    player.velocityY = 5
+  } else {
+    player.velocityY = 0
+  } */
 }
 
 setInterval(() => {
