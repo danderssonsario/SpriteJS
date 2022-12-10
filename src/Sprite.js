@@ -1,6 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
-/* eslint-disable accessor-pairs */
-/* eslint-disable jsdoc/check-param-names */
 import { Animation } from './Animations/Animation.js'
 import { Rectangle } from './Physics/Rectangle.js'
 
@@ -25,6 +22,7 @@ export class Sprite extends Rectangle {
   #animations
   #currentAnimation
   #delayPerFrame
+  #pauseAnimation
 
   /**
    *
@@ -45,13 +43,24 @@ export class Sprite extends Rectangle {
     this.#image = image
     this.#angle = angle
 
-    // Animation
     this.#animations = {}
     this.#currentAnimation = null
-
-    // Current (Animation = one or more frames)
     this.#currentFrame = null
     this.#currentFrameIndex = 0
+    this.#pauseAnimation = true
+  }
+
+  get pauseAnimation () {
+    return this.#pauseAnimation
+  }
+
+  set pauseAnimation (value) {
+    this.#pauseAnimation = value
+  }
+
+  flip (horizontally, vertically) {
+    this.#flipX = horizontally
+    this.#flipY = vertically
   }
 
   /**
@@ -63,11 +72,6 @@ export class Sprite extends Rectangle {
     return this.#flipX === true
   }
 
-  /**
-   * Sets property to flip sprite on horizontal axis.
-   *
-   * @param {boolean} value - Flip value.
-   */
   set flipX (value) {
     if (typeof value !== 'boolean') {
       throw new Error(`Sprite '${this.name}': flip can only be boolean.`)
@@ -84,11 +88,6 @@ export class Sprite extends Rectangle {
     return this.#flipY === true
   }
 
-  /**
-   * Sets property to flip sprite on vertical axis.
-   *
-   * @param {boolean} value - Flip value.
-   */
   set flipY (value) {
     if (typeof value !== 'boolean') {
       throw new Error(`Sprite '${this.name}': flip can only be boolean.`)
@@ -109,28 +108,35 @@ export class Sprite extends Rectangle {
     }
   }
 
-  /**
-   * Updates sprite properties before drawing to canvas.
-   */
   update () {
     super.update()
     this.#updateFrame()
     this.#updateContext()
   }
 
-  /**
-   * Updates context.
-   */
   #updateContext () {
     this.#context.save()
     this.#flipContext()
     this.#rotateContext()
-    this.#context.restore()
   }
 
-  /**
-   * Draws sprite.
-   */
+  #flipContext () {
+    if (this.#flipX || this.flipY) {
+      this.#context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
+      this.#context.scale(this.#flipX ? -1 : 1, this.flipY ? -1 : 1)
+      this.#context.translate(
+        -(this.positionX + this.width / 2),
+        -(this.positionY + this.height / 2)
+      )
+    }
+  }
+
+  #rotateContext () {
+    this.#context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
+    this.#context.rotate((this.#angle * Math.PI) / 180)
+    this.#context.translate(-(this.positionX + this.width / 2), -(this.positionY + this.height / 2))
+  }
+
   draw () {
     this.#context.drawImage(
       this.#currentFrame.image,
@@ -144,29 +150,6 @@ export class Sprite extends Rectangle {
       this.height
     )
     this.#context.restore()
-  }
-
-  /**
-   * Flips context if toggled.
-   */
-  #flipContext () {
-    if (this.flipX || this.flipY) {
-      this.#context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
-      this.#context.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1)
-      this.#context.translate(
-        -(this.positionX + this.width / 2),
-        -(this.positionY + this.height / 2)
-      )
-    }
-  }
-
-  /**
-   * Rotates context.
-   */
-  #rotateContext () {
-    this.#context.translate(this.positionX + this.width / 2, this.positionY + this.height / 2)
-    this.#context.rotate((this.#angle * Math.PI) / 180)
-    this.#context.translate(-(this.positionX + this.width / 2), -(this.positionY + this.height / 2))
   }
 
   /**
@@ -193,11 +176,11 @@ export class Sprite extends Rectangle {
   }
 
   /**
-   * Sets new frame index from current animation loop.
+   * Sets new frame from current animation loop.
    */
   #updateFrame () {
     this.#currentFrame = this.#currentAnimation.frames[this.#currentFrameIndex]
-    if (this.#hasReachedDelay()) {
+    if (this.#hasReachedDelay() && !this.#pauseAnimation) {
       if (this.#currentFrameIndex >= this.#currentAnimation.frames.length - 1) {
         this.#currentFrameIndex = 0
       } else {

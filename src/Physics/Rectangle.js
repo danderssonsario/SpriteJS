@@ -1,4 +1,3 @@
-/* eslint-disable accessor-pairs */
 import { Body } from './Body.js'
 
 /**
@@ -6,15 +5,7 @@ import { Body } from './Body.js'
  */
 export class Rectangle extends Body {
   #bounds
-  #width
-  #height
-  /**
-   *
-   * @param {number} width - Width of rectangle object.
-   * @param {number} height - Height of rectangle object.
-   * @param {number} positionX - X coordinate of rectangle object.
-   * @param {number} positionY - Y coordinate of rectangle object.
-   */
+
   constructor (width, height, positionX, positionY) {
     super(positionX, positionY)
     this.width = width
@@ -78,66 +69,34 @@ export class Rectangle extends Body {
    * Checks movement boundaries.
    */
   #checkBounds () {
-    let minimumSpriteX = null
-    let maximumSpriteX = null
-    let minimumSpriteY = null
-    let maximumSpriteY = null
-
-    // Get maximum and minimum coordinates for sprite.
-    for (const vertex in this.vertices) {
-      if (minimumSpriteX === null || this.vertices[vertex].x < minimumSpriteX) {
-        minimumSpriteX = this.vertices[vertex].x
-      }
-      if (maximumSpriteX === null || this.vertices[vertex].x > maximumSpriteX) {
-        maximumSpriteX = this.vertices[vertex].x
-      }
-      if (minimumSpriteY === null || this.vertices[vertex].y < minimumSpriteY) {
-        minimumSpriteY = this.vertices[vertex].y
-      }
-      if (maximumSpriteY === null || this.vertices[vertex].y > maximumSpriteY) {
-        maximumSpriteY = this.vertices[vertex].y
-      }
+    if (this.positionX < this.#bounds.x.min) {
+      this.positionX = this.#bounds.x.min
+      this.velocityX = 0
     }
-
-    // Compare to bounding box
-    if (minimumSpriteX < this.#bounds.x.min) {
-      this.positionX += 1
+    if (this.positionX > (this.#bounds.x.max - this.width)) {
+      this.positionX = (this.#bounds.x.max - this.width)
       this.velocityX = 0
-    } else if (maximumSpriteX > this.#bounds.x.max) {
-      this.positionX -= 1
-      this.velocityX = 0
-    } else if (minimumSpriteY < this.#bounds.y.min) {
-      this.positionY += 1
+    }
+    if (this.positionY < this.#bounds.y.min) {
+      this.positionY = this.#bounds.y.min
       this.velocityY = 0
-    } else if (maximumSpriteY > this.#bounds.y.max) {
-      this.positionY -= 1
+    }
+    if (this.positionY > (this.#bounds.y.max - this.height)) {
+      this.positionY = (this.#bounds.y.max - this.height)
       this.velocityY = 0
     }
   }
 
   /**
-   * Detects collision.
+   * Detects collision between two rectangles.
    *
    * @param {object} target - { x: number, y: number, width: number, height: number }
    * @returns {boolean} - True if collision is detected, false if not.
    */
   detectCollision (target) {
-    if (this.#objectsOverlap(target)) {
-      return true
-    } else {
-      return false
-    }
-  }
-
-  // eslint-disable-next-line jsdoc/require-jsdoc
-  #objectsOverlap (target) {
-    if (
-      this.positionX + this.width >= target.positionX &&
+    return this.positionX + this.width >= target.positionX &&
       this.positionX <= target.positionX + target.width &&
       this.positionY + this.height >= target.positionY &&
       this.positionY <= target.positionY + target.height
-    ) {
-      return true
-    }
   }
 }
